@@ -116,9 +116,6 @@ The global clinical trial ecosystem generates an enormous amount of publicly ava
 
 ---
 
-#### Technical Architecture
-
-```
 #### Technical Architecture & Multi-Agent Design
 
 The application's AI layer is built on a formal, modular **Multi-Agent Orchestrator Architecture** located in the `src/agents/` directory. Rather than relying on simple ad-hoc conditionals, the platform implements a ReAct-style (Reason + Act) loop with stateful session memory and a structured tool execution registry.
@@ -194,8 +191,6 @@ Maintains conversation state across multi-turn runs. It tracks:
 *   **Entity Cache:** Automatically retains the last searched drug, condition, or company to handle follow-up pronouns (e.g., "Compare Advil and Tylenol" followed by "show its side effects").
 *   **Patient Profile:** Caches the parsed age, gender, and conditions for eligibility matching so users do not have to re-enter details.
 *   **Tool Output Caching:** Stores previous API responses for instant recall on follow-up turns.
-
-```
 
 **Tech Stack:**
 

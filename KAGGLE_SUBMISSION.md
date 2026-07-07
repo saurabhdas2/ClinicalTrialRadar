@@ -273,7 +273,7 @@ Micro-interactions include:
 | Resource | URL / Reference |
 |----------|----------------|
 | **Live App** | `http://localhost:5173/` (run locally with `npm run dev`) |
-| **GitHub Repository** | _(add your GitHub repo URL here)_ |
+| **GitHub Repository** | https://github.com/saurabhdas2/ClinicalTrialRadar |
 | **ClinicalTrials.gov V2 API Docs** | https://clinicaltrials.gov/data-api/api |
 | **OpenFDA API Docs** | https://open.fda.gov/apis/drug/label/ |
 | **OpenFDA Brand Identity** | https://open.fda.gov |

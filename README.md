@@ -29,7 +29,7 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/<your-username>/ClinicalTrialRadar.git
+git clone https://github.com/saurabhdas2/ClinicalTrialRadar.git
 cd ClinicalTrialRadar
 
 # Install dependencies (Node 18+ required)

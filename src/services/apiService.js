@@ -31,7 +31,7 @@
  *   field naming, making it easy to swap or add new data sources.
  */
 
-import { MOCK_TRIALS, MOCK_DRUGS, MOCK_COMPANY_METRICS } from './mockData';
+import { MOCK_TRIALS, MOCK_DRUGS, MOCK_COMPANY_METRICS, DEFAULT_GLOBAL_STATS } from './mockData';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // UNIFIED SCHEMA MAPPERS

@@ -360,63 +360,158 @@ export const fetchOpenFDADrug = async (query) => {
  * Returns clinical pipeline metrics for a pharmaceutical company.
  *
  * DATA STRATEGY:
- *   1. If the company is in MOCK_COMPANY_METRICS → return curated real data
- *   2. Otherwise → generate plausible synthetic data using a deterministic
- *      hash of the company name (same name always produces same numbers)
- *
- * The hash-based generation ensures the UI looks realistic for any company
- * the user types, while being deterministic (no surprising random changes
- * on refresh).
+ *   1. Fetches live clinical trials sponsored by this company from ClinicalTrials.gov V2
+ *   2. Concurrently fetches FDA-approved drug labels manufactured by this company from OpenFDA
+ *   3. Dynamically aggregates statistics (timeline, status distribution, phases, therapeutic areas)
+ *   4. Falls back to static mock data or deterministic hash generation on API failures
  *
  * @param {string} companyName - Pharmaceutical company name
- * @returns {object} Company metrics object
+ * @returns {Promise<object>} Company metrics object
  */
-export const fetchCompanyMetrics = (companyName) => {
-  // Look up in curated dataset (case-insensitive)
-  const matchedKey = Object.keys(MOCK_COMPANY_METRICS).find(
-    k => k.toLowerCase() === companyName.toLowerCase()
-  );
-  if (matchedKey) {
-    return { name: matchedKey, ...MOCK_COMPANY_METRICS[matchedKey] };
+export const fetchCompanyMetrics = async (companyName) => {
+  const normalizedSponsor = companyName.toLowerCase().trim();
+
+  try {
+    // 1. Fetch studies sponsored by the company
+    const ctUrl = `https://clinicaltrials.gov/api/v2/studies?query.spons=${encodeURIComponent(companyName)}&pageSize=50`;
+    const ctResponse = await fetch(ctUrl);
+    if (!ctResponse.ok) throw new Error('ClinicalTrials sponsor query failed');
+    const ctData = await ctResponse.json();
+
+    // 2. Fetch approved drugs from OpenFDA
+    let fdaDrugs = [];
+    try {
+      const fdaUrl = `https://api.fda.gov/drug/label.json?search=openfda.manufacturer_name:"${encodeURIComponent(companyName)}"&limit=10`;
+      const fdaResponse = await fetch(fdaUrl);
+      if (fdaResponse.ok) {
+        const fdaData = await fdaResponse.json();
+        fdaDrugs = [...new Set((fdaData.results || [])
+          .map(r => r.openfda?.brand_name?.[0] || r.openfda?.generic_name?.[0])
+          .filter(Boolean)
+        )].slice(0, 6);
+      }
+    } catch (e) {
+      console.warn('[apiService] OpenFDA manufacturer search failed:', e.message);
+    }
+
+    const studies = (ctData.studies || []).map(mapRawStudyToUnified);
+
+    if (studies.length === 0) {
+      throw new Error('No studies found for this sponsor in live API');
+    }
+
+    // 3. Process status distribution
+    const statusCounts = {};
+    studies.forEach(s => {
+      let statusKey = 'Active, Not Recruiting';
+      if (s.status === 'RECRUITING') statusKey = 'Recruiting';
+      else if (s.status === 'COMPLETED') statusKey = 'Completed';
+      else if (['TERMINATED', 'WITHDRAWN', 'SUSPENDED'].includes(s.status)) statusKey = 'Terminated / Suspended';
+      
+      statusCounts[statusKey] = (statusCounts[statusKey] || 0) + 1;
+    });
+    const status = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
+
+    // 4. Process phase breakdown
+    const phaseCounts = { 'Phase 1': 0, 'Phase 2': 0, 'Phase 3': 0, 'Phase 4': 0 };
+    studies.forEach(s => {
+      (s.phases || []).forEach(p => {
+        if (p === 'PHASE1') phaseCounts['Phase 1']++;
+        else if (p === 'PHASE2') phaseCounts['Phase 2']++;
+        else if (p === 'PHASE3') phaseCounts['Phase 3']++;
+        else if (p === 'PHASE4') phaseCounts['Phase 4']++;
+      });
+    });
+    const phases = Object.entries(phaseCounts).map(([phase, count]) => ({ phase, count }));
+
+    // 5. Process therapeutic focus areas
+    const areaCounts = {};
+    studies.forEach(s => {
+      if (s.therapeuticArea) {
+        areaCounts[s.therapeuticArea] = (areaCounts[s.therapeuticArea] || 0) + 1;
+      }
+    });
+    const totalCounted = Object.values(areaCounts).reduce((a, b) => a + b, 0);
+    const therapeuticAreas = Object.entries(areaCounts)
+      .map(([name, count]) => ({ name, count, percentage: totalCounted ? Math.round((count / totalCounted) * 100) : 0 }))
+      .sort((a, b) => b.count - a.count);
+
+    // 6. Process years timeline (2018–2026)
+    const yearsMap = {};
+    for (let y = 2018; y <= 2026; y++) {
+      yearsMap[y] = { active: 0, completed: 0 };
+    }
+    studies.forEach(s => {
+      const startYear = s.startDate ? new Date(s.startDate).getFullYear() : null;
+      const compYear = s.completionDate ? new Date(s.completionDate).getFullYear() : null;
+      
+      if (startYear && yearsMap[startYear]) {
+        yearsMap[startYear].active++;
+      }
+      if (s.status === 'COMPLETED' && compYear && yearsMap[compYear]) {
+        yearsMap[compYear].completed++;
+      }
+    });
+    const years = Object.entries(yearsMap).map(([year, val]) => ({
+      year,
+      active: val.active,
+      completed: val.completed
+    }));
+
+    return {
+      name: companyName.charAt(0).toUpperCase() + companyName.slice(1),
+      years,
+      status,
+      phases,
+      therapeuticAreas,
+      approvedDrugs: fdaDrugs.length > 0 ? fdaDrugs : [`${companyName} Compound-A`, `${companyName} Compound-B`]
+    };
+
+  } catch (error) {
+    console.warn(`[apiService] Failed to fetch live metrics for ${companyName}, falling back to mock:`, error.message);
+
+    // Look up in curated dataset (case-insensitive)
+    const matchedKey = Object.keys(MOCK_COMPANY_METRICS).find(
+      k => k.toLowerCase() === normalizedSponsor
+    );
+    if (matchedKey) {
+      return { name: matchedKey, ...MOCK_COMPANY_METRICS[matchedKey] };
+    }
+
+    // Deterministic synthetic data generation via string hash fallback
+    const hash = normalizedSponsor.split('').reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7) & 0x7fffffff;
+    const h = (mod, offset = 0) => (hash % mod) + offset;
+
+    return {
+      name: companyName.charAt(0).toUpperCase() + companyName.slice(1),
+      years: Array.from({ length: 9 }, (_, i) => ({
+        year:      String(2018 + i),
+        active:    h(20, 10) + i * 2,
+        completed: h(12, 5)  + i
+      })),
+      status: [
+        { name: 'Recruiting',              value: h(15, 10) },
+        { name: 'Active, Not Recruiting',  value: h(10, 5)  },
+        { name: 'Completed',               value: h(20, 15) },
+        { name: 'Terminated / Suspended',  value: h(4,  1)  }
+      ],
+      phases: [
+        { phase: 'Phase 1', count: h(6,  3)  },
+        { phase: 'Phase 2', count: h(10, 6)  },
+        { phase: 'Phase 3', count: h(15, 10) },
+        { phase: 'Phase 4', count: h(8,  4)  }
+      ],
+      therapeuticAreas: [
+        { name: 'Oncology',            count: h(20, 5) },
+        { name: 'Cardiology',          count: h(12, 3) },
+        { name: 'Neurology',           count: h(14, 2) },
+        { name: 'Infectious Diseases', count: h(8,  1) }
+      ],
+      approvedDrugs: [`${companyName} Drug-A`, `${companyName} Drug-B`]
+    };
   }
-
-  // Deterministic synthetic data generation via string hash
-  // djb2 hash: accumulates char codes with prime multiplier
-  const hash = companyName.split('').reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7) & 0x7fffffff;
-  const h = (mod, offset = 0) => (hash % mod) + offset;
-
-  return {
-    name: companyName,
-    // Active vs Completed trial counts by year (2018-2026)
-    years: Array.from({ length: 9 }, (_, i) => ({
-      year:      String(2018 + i),
-      active:    h(20, 10) + i * 2,
-      completed: h(12, 5)  + i
-    })),
-    // Portfolio status distribution
-    status: [
-      { name: 'Recruiting',              value: h(15, 10) },
-      { name: 'Active, Not Recruiting',  value: h(10, 5)  },
-      { name: 'Completed',               value: h(20, 15) },
-      { name: 'Terminated / Suspended',  value: h(4,  1)  }
-    ],
-    // Phase breakdown
-    phases: [
-      { phase: 'Phase 1', count: h(6,  3)  },
-      { phase: 'Phase 2', count: h(10, 6)  },
-      { phase: 'Phase 3', count: h(15, 10) },
-      { phase: 'Phase 4', count: h(8,  4)  }
-    ],
-    // Therapeutic focus areas
-    therapeuticAreas: [
-      { name: 'Oncology',            count: h(20, 5) },
-      { name: 'Cardiology',          count: h(12, 3) },
-      { name: 'Neurology',           count: h(14, 2) },
-      { name: 'Infectious Diseases', count: h(8,  1) }
-    ],
-    approvedDrugs: [`${companyName} Drug-A`, `${companyName} Drug-B`]
-  };
 };
+
 
 /**
  * fetchGlobalStats()

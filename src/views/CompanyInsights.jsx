@@ -11,6 +11,7 @@ const CompanyInsights = () => {
   const [searchTerm, setSearchTerm] = useState('Pfizer');
   const [showDropdown, setShowDropdown] = useState(false);
   const [companyData, setCompanyData] = useState(null);
+  const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
 
   // List of popular companies for type-ahead suggestions
@@ -32,11 +33,18 @@ const CompanyInsights = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const loadCompanyData = (name) => {
-    const metrics = fetchCompanyMetrics(name);
-    setCompanyData(metrics);
-    setSearchTerm(metrics.name);
-    setShowDropdown(false);
+  const loadCompanyData = async (name) => {
+    setLoading(true);
+    try {
+      const metrics = await fetchCompanyMetrics(name);
+      setCompanyData(metrics);
+      setSearchTerm(metrics.name);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+      setShowDropdown(false);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -121,7 +129,14 @@ const CompanyInsights = () => {
         </form>
       </div>
 
-      {companyData ? (
+      {loading ? (
+        <div className="card" style={{ padding: '60px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+            <Building className="animate-pulse" size={48} color="var(--primary)" />
+            <span>Fetching live pipelines & OpenFDA drug approvals...</span>
+          </div>
+        </div>
+      ) : companyData ? (
         /* Company Dashboard Grid */
         <div>
           {/* Header Row */}

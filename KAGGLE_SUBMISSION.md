@@ -24,42 +24,6 @@ An agentic web app integrating ClinicalTrials.gov V2 & OpenFDA to deliver real-t
 
 ![Clinical Trial Radar — Kaggle Thumbnail](file:///Users/saurabhdas/Documents/agy-projects/ClinicalTrialRadar/public/kaggle_thumbnail.png)
 
-> Upload `public/kaggle_thumbnail.png` directly to the Kaggle card image field.
-
----
-
-### Submission Tracks
-
-- ✅ **Web Application / Data Product**
-- ✅ **Healthcare & Life Sciences**
-- ✅ **Open Data Integration** (ClinicalTrials.gov + OpenFDA — fully public APIs)
-- ✅ **AI / Agentic Systems**
-- ✅ **Data Visualization**
-
----
-
-## MEDIA GALLERY
-
----
-
-### Images
-
-Below is the list of recommended screenshots to capture from the live app at `http://localhost:5173/` and upload to the gallery:
-
-| # | Screen | Capture Instructions |
-|---|--------|----------------------|
-| 1 | **Dashboard — Hero Banner + KPI Cards** | Full-page screenshot of the opening dashboard view showing the navy hero banner, 4 KPI stat cards, and the top of the two Recharts |
-| 2 | **Dashboard — Interactive Charts** | Scroll to show the Pie Chart (trial status distribution) and the Horizontal Bar Chart (trials by therapeutic area) side-by-side |
-| 3 | **Clinical Search — Results Grid** | Search for "cancer" to populate the 2-column trial card grid. Show one card expanded with status badge and sponsor info |
-| 4 | **Trial Detail Modal** | Click the eye icon on any trial to show the full details modal: official title, criteria, age limits, locations |
-| 5 | **Eligibility Matcher — Results** | Enter Age=65, Condition=Heart Failure and click "Run Eligibility Matcher". Show the scored results: green Eligible, amber Partial |
-| 6 | **OpenFDA Drug Search** | Search "Keytruda" to show the full label panel: indications, warnings (amber box), adverse reactions (red box) |
-| 7 | **Drug Comparison Table** | Switch to "Side-by-Side Comparator" tab, compare Advil vs Tylenol. Show the full comparison table |
-| 8 | **Company Insights — Pfizer** | Show the Pfizer dashboard: navy header card, Area chart timeline (2018–2026), Pie chart, Phase bar chart |
-| 9 | **Company Insights — Type-Ahead** | Show the type-ahead dropdown mid-search (e.g., typing "Roc" with "Roche" suggestion highlighted) |
-| 10 | **Trial Radar AI — Thinking Steps** | Trigger the shortcut "Find active breast cancer trials by Novartis". Capture the mid-state thinking log streaming in |
-| 11 | **Trial Radar AI — Eligibility Cards** | Show the AI agent's final response with inline eligibility widgets: trial cards with green/amber/red left-border |
-| 12 | **AI Agent — Drug Comparison Widget** | Show "Compare side effects of Advil and Tylenol" query with the rendered inline comparison table inside the chat thread |
 
 ---
 
@@ -69,60 +33,7 @@ Below is the list of recommended screenshots to capture from the live app at `ht
 
 > A 12-second walkthrough of all 10 views: Dashboard → Clinical Search → Trial Modal → Eligibility Matcher → OpenFDA Drug Search → Company Insights → Trial Radar AI Agent.
 
-**Suggested Demo Video Script (2–3 min screen recording):**
 
-```
-[00:00 - 00:15] — Opening
-  Pan across the Dashboard hero banner
-  Hover over the Pie chart to show interactive tooltips
-  Hover over the Bar chart to highlight therapeutic area counts
-
-[00:16 - 00:35] — Clinical Search
-  Type "lung cancer" in keyword field
-  Set Phase = Phase 3, Status = Recruiting
-  Click Search → results populate
-  Click eye icon on NCT06182944 (Merck Keytruda trial)
-  Show full details modal: criteria, locations, sponsor
-
-[00:36 - 00:55] — Eligibility Matcher
-  Enter: Age = 55, Gender = Female, Condition = Breast Cancer
-  Click "Run Eligibility Matcher"
-  Expand the first ELIGIBLE result card
-  Show green checkmarks for age range and condition match
-
-[00:56 - 01:15] — OpenFDA Drug Search
-  Search "Keytruda"
-  Show the brand/generic info panel
-  Switch to Comparator tab → enter Advil vs Tylenol
-  Click Compare → show the color-coded comparison table
-
-[01:16 - 01:35] — Company Insights
-  Type "Roche" in search bar → select from dropdown
-  Show the navy gradient header card
-  Animate through the Area chart (2018–2026 timeline)
-  Scroll to Phase distribution bar chart
-
-[01:36 - 02:05] — Trial Radar AI Agent
-  Click sidebar "Trial Radar AI"
-  Click shortcut: "Find active breast cancer trials by Novartis"
-  Show thinking steps streaming in real-time (3-4 steps)
-  Show final trial cards rendered inline in the chat
-
-[02:06 - 02:30] — AI Agent Eligibility
-  Type: "Am I eligible for Alzheimer's trials if I am 68 years old?"
-  Show reasoning steps: parsing intent, compiling profile, fetching trials, scoring
-  Show the eligibility matrix widget with green/amber/red cards
-  Zoom into a card's checklist of criteria reasons
-
-[02:31 - 02:45] — Closing
-  Return to Dashboard
-  Final wide shot of the full layout
-  Fade out
-```
-
-**Recommended Recording Tool:** Loom / OBS / QuickTime Screen Recording
-**Resolution:** 1920×1080 or 1280×800
-**Format:** MP4 (H.264)
 
 ---
 
@@ -208,30 +119,82 @@ The global clinical trial ecosystem generates an enormous amount of publicly ava
 #### Technical Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Clinical Trial Radar                         │
-│                    React 19 + Vite 8 SPA                        │
-├─────────────────────────────────────────────────────────────────┤
-│  Views Layer                                                     │
-│  ┌──────────┐ ┌──────────┐ ┌────────────┐ ┌─────────────────┐  │
-│  │Dashboard │ │TrialSrch │ │ Eligibility │ │ OpenFDA Drugs   │  │
-│  └──────────┘ └──────────┘ └────────────┘ └─────────────────┘  │
-│  ┌──────────────────┐  ┌───────────────────────────────────────┐│
-│  │ CompanyInsights  │  │   Trial Radar AI Agent Panel          ││
-│  └──────────────────┘  └───────────────────────────────────────┘│
-├─────────────────────────────────────────────────────────────────┤
-│  Services Layer                                                  │
-│  ┌────────────────────┐  ┌──────────────────┐  ┌─────────────┐ │
-│  │   apiService.js    │  │  agentEngine.js  │  │ mockData.js │ │
-│  │ ClinicalTrials V2  │  │  NLP Intent      │  │ 10 trials   │ │
-│  │ OpenFDA Label API  │  │  Eligibility     │  │ 5 drugs     │ │
-│  │ Auto mock fallback │  │  Reasoning steps │  │ 6 companies │ │
-│  └────────────────────┘  └──────────────────┘  └─────────────┘ │
-├─────────────────────────────────────────────────────────────────┤
-│  Data Sources (Public APIs — No API Key Required)               │
-│  ● ClinicalTrials.gov V2  →  /api/v2/studies                   │
-│  ● OpenFDA Drug Labels    →  /drug/label.json                   │
-└─────────────────────────────────────────────────────────────────┘
+#### Technical Architecture & Multi-Agent Design
+
+The application's AI layer is built on a formal, modular **Multi-Agent Orchestrator Architecture** located in the `src/agents/` directory. Rather than relying on simple ad-hoc conditionals, the platform implements a ReAct-style (Reason + Act) loop with stateful session memory and a structured tool execution registry.
+
+```
+                                  User Query
+                                      │
+                                      ▼
+                                ┌───────────┐
+                                │ Memory    │ ◄─── Session context loaded
+                                └─────┬─────┘
+                                      │
+                                      ▼
+                        ┌───────────────────────────┐
+                        │    Orchestrator Agent     │ ◄─── Perceives & Classifies Intent
+                        │  (agents/orchestrator.js) │
+                        └─────────────┬─────────────┘
+                                      │
+                         Builds plan, pipes inputs to:
+                                      │
+        ┌─────────────────────────────┼─────────────────────────────┐
+        ▼                             ▼                             ▼
+  ┌──────────────┐             ┌──────────────┐              ┌──────────────┐
+  │ TrialSearch  │             │ Eligibility  │              │ Drug/Company │
+  │  Sub-Agent   │             │  Sub-Agent   │              │  Sub-Agent   │
+  └──────┬───────┘             └──────┬───────┘              └──────┬───────┘
+         │                            │                             │
+         └────────────────────────────┼─────────────────────────────┘
+                                      │
+                                      ▼
+                          ┌───────────────────────┐
+                          │     Tool Registry     │ ◄─── Validates schema & inputs
+                          │ (agents/toolRegistry.js)│
+                          └───────────┬───────────┘
+                                      │
+                 Invokes matching executing tool function:
+                                      │
+        ┌─────────────────────────────┼─────────────────────────────┐
+        ▼                             ▼                             ▼
+ ┌──────────────┐              ┌──────────────┐              ┌──────────────┐
+ │ ClinicalTrials│             │   OpenFDA    │              │ Eligibility  │
+ │  Search API  │              │  Label API   │              │ Scoring Engine│
+ └──────────────┘              └──────────────┘              └──────────────┘
+```
+
+##### 1. Master Orchestrator Agent (`src/agents/orchestrator.js`)
+Acts as the brain of the AI interface. It:
+*   **Perceives:** Receives query and reads recent turn history from `agentMemory.js`.
+*   **Classifies Intent:** Parses query into one of 5 distinct intents (`trial_search`, `drug_search`, `drug_compare`, `company_insights`, `eligibility_check`).
+*   **Extracts Entities:** Locates condition names, drug names, phases, and sponsor companies.
+*   **Plans & Pipes:** Generates a sequence of execution steps, piping the output of one tool as input to the next (e.g., outputs of `search_clinical_trials` piped directly into `score_eligibility`).
+
+##### 2. Tool Registry (`src/agents/toolRegistry.js`)
+Implements the **Tool-Augmented Agent** pattern. Tools are defined with OpenAI-compatible function calling schemas (names, descriptions, parameter types, required fields), enabling drop-in compatibility with standard LLMs (like Gemini or GPT) by replacing the parsing logic with function-calling outputs:
+*   `search_clinical_trials`: Live ClinicalTrials.gov V2 filter query.
+*   `get_trial_details`: Detailed trial protocol loader.
+*   `rank_trials_by_relevance`: Relevance indexing based on density.
+*   `search_fda_label`: OpenFDA query for warnings/adverse reactions.
+*   `compare_drugs`: Parallel label resolver.
+*   `parse_patient_profile`: Natural language patient information extractor.
+*   `score_eligibility`: Detailed multi-criterion scoring matrix.
+*   `get_company_pipeline`: Analytics metric loader.
+*   `summarize_trial_landscape`: Statistics accumulator.
+
+##### 3. Eligibility Sub-Agent (`src/agents/eligibilityAgent.js`)
+A specialized clinical matching agent. When intent is classified as `eligibility_check`, this agent is spun up to match the compiled patient profile against fetched trials using a three-tier gate system:
+*   *Hard Gates:* Numeric age verification (normalized to years) and gender restriction checks.
+*   *Soft Gates:* Bidirectional condition keyword overlap check.
+*   *Exclusion Gates:* Free-text criteria scan filtering patient symptoms against trial exclusion constraints.
+
+##### 4. Session Memory Module (`src/agents/agentMemory.js`)
+Maintains conversation state across multi-turn runs. It tracks:
+*   **Entity Cache:** Automatically retains the last searched drug, condition, or company to handle follow-up pronouns (e.g., "Compare Advil and Tylenol" followed by "show its side effects").
+*   **Patient Profile:** Caches the parsed age, gender, and conditions for eligibility matching so users do not have to re-enter details.
+*   **Tool Output Caching:** Stores previous API responses for instant recall on follow-up turns.
+
 ```
 
 **Tech Stack:**
@@ -262,15 +225,6 @@ Micro-interactions include:
 
 ---
 
-#### What Makes This Stand Out
-
-1. **Zero setup required** — both APIs are fully public with no keys or registration. Clone and run `npm install && npm run dev`.
-2. **Graceful degradation** — if APIs are slow or rate-limited, the app seamlessly falls back to rich mock data with no blank states.
-3. **Agentic without LLMs** — the AI agent delivers the feeling of intelligent, multi-step reasoning using a structured intent engine and streaming step-by-step logs — no expensive API calls, no rate limits, fully deterministic.
-4. **Eligibility matching that works** — the criteria parser handles real-world complexity: age unit normalization (years/months/weeks), gender restrictions, free-text exclusion conflict detection.
-5. **Company-level analytics** — type-ahead company search with 3 linked interactive charts gives a genuine pharma competitive intelligence feel.
-
----
 
 ### Project Links
 
@@ -306,7 +260,6 @@ open http://localhost:5173
 
 **Requirements:** Node.js v18+ · npm v9+
 
-No environment variables, no API keys, no additional configuration needed.
 
 ---
 

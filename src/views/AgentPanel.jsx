@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { runAgentQuery } from '../services/agentEngine';
 import TrialDetailsModal from '../components/TrialDetailsModal';
 import { 

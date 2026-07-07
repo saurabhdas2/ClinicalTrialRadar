@@ -207,7 +207,7 @@ Maintains conversation state across multi-turn runs. It tracks:
 | Styling | Vanilla CSS with design token system |
 | Data Source 1 | ClinicalTrials.gov V2 REST API (public) |
 | Data Source 2 | OpenFDA Drug Label REST API (public) |
-| Fallback | High-fidelity curated mock dataset |
+| Fallback | In-memory API failure recovery layer |
 | AI Layer | Client-side NLP intent engine (no LLM API cost) |
 
 ---

@@ -75,10 +75,15 @@ Each query triggers:
 src/
 ├── App.jsx                          # Sidebar navigation + view routing
 ├── index.css                        # Design token system (OpenFDA-inspired)
+├── agents/                          # Formal Agentic AI Layer
+│   ├── orchestrator.js              # Master ReAct Orchestrator Agent
+│   ├── eligibilityAgent.js          # Specialized Eligibility Matcher sub-agent
+│   ├── agentMemory.js               # Stateful session-scoped memory
+│   └── toolRegistry.js              # Typed tool schemas (9 registered tools)
 ├── services/
 │   ├── mockData.js                  # 10 real trials + 5 FDA drugs + 6 company timelines
-│   ├── apiService.js                # ClinicalTrials.gov V2 + OpenFDA with auto-fallback
-│   └── agentEngine.js               # NLP intent parser + eligibility scorer
+│   ├── apiService.js                # ClinicalTrials.gov V2 + OpenFDA with dynamic endpoints
+│   └── agentEngine.js               # Public backward-compatibility facade
 ├── components/
 │   └── TrialDetailsModal.jsx        # Shared reusable trial detail modal
 └── views/
@@ -88,6 +93,49 @@ src/
     ├── DrugSearch.jsx               # FDA search + details panel + comparator
     ├── CompanyInsights.jsx          # Type-ahead + 3 Recharts + phase table
     └── AgentPanel.jsx               # Chat UI + reasoning steps + inline widgets
+```
+
+### 🧠 Agentic Flow Diagram
+
+```
+                                  User Query
+                                      │
+                                      ▼
+                                ┌───────────┐
+                                │ Memory    │ ◄─── Session context loaded
+                                └─────┬─────┘
+                                      │
+                                      ▼
+                        ┌───────────────────────────┐
+                        │    Orchestrator Agent     │ ◄─── Perceives & Classifies Intent
+                        │  (agents/orchestrator.js) │
+                        └─────────────┬─────────────┘
+                                      │
+                         Builds plan, pipes inputs to:
+                                      │
+        ┌─────────────────────────────┼─────────────────────────────┐
+        ▼                             ▼                             ▼
+  ┌──────────────┐             ┌──────────────┐              ┌──────────────┐
+  │ TrialSearch  │             │ Eligibility  │              │ Drug/Company │
+  │  Sub-Agent   │             │  Sub-Agent   │              │  Sub-Agent   │
+  └──────┬───────┘             └──────┬───────┘              └──────┬───────┘
+         │                            │                             │
+         └────────────────────────────┼─────────────────────────────┘
+                                      │
+                                      ▼
+                          ┌───────────────────────┐
+                          │     Tool Registry     │ ◄─── Validates schema & inputs
+                          │ (agents/toolRegistry.js)│
+                          └───────────┬───────────┘
+                                      │
+                 Invokes matching executing tool function:
+                                      │
+        ┌─────────────────────────────┼─────────────────────────────┐
+        ▼                             ▼                             ▼
+ ┌──────────────┐              ┌──────────────┐              ┌──────────────┐
+ │ ClinicalTrials│             │   OpenFDA    │              │ Eligibility  │
+ │  Search API  │              │  Label API   │              │ Scoring Engine│
+ └──────────────┘              └──────────────┘              └──────────────┘
 ```
 
 ---

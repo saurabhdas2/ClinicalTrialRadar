@@ -225,7 +225,7 @@ Micro-interactions include:
 
 | Resource | URL / Reference |
 |----------|----------------|
-| **Live App** | `http://localhost:5173/` (run locally with `npm run dev`) |
+| **Live App** | https://clinicaltrialradar.netlify.app |
 | **GitHub Repository** | https://github.com/saurabhdas2/ClinicalTrialRadar |
 | **Demo Video (YouTube)** | https://youtu.be/lJzXiPz1eA4 |
 | **ClinicalTrials.gov V2 API Docs** | https://clinicaltrials.gov/data-api/api |

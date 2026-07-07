@@ -4,6 +4,7 @@
 
 ![Clinical Trial Radar](./public/kaggle_thumbnail.png)
 
+[![Live App](https://img.shields.io/badge/Live%20App-Netlify-00ad9f?style=flat-square&logo=netlify)](https://clinicaltrialradar.netlify.app)
 [![Live APIs](https://img.shields.io/badge/APIs-ClinicalTrials.gov%20V2%20%7C%20OpenFDA-0071bc?style=flat-square)](https://clinicaltrials.gov)
 [![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-8-646cff?style=flat-square&logo=vite)](https://vite.dev)
@@ -11,6 +12,8 @@
 [![Demo Video](https://img.shields.io/badge/Demo-YouTube-ff0000?style=flat-square&logo=youtube)](https://youtu.be/lJzXiPz1eA4)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
+> **🚀 Live App URL:** [https://clinicaltrialradar.netlify.app](https://clinicaltrialradar.netlify.app)
+> 
 > **▶️ Demo Video:** [https://youtu.be/lJzXiPz1eA4](https://youtu.be/lJzXiPz1eA4)
 
 ---

@@ -65,6 +65,10 @@ Below is the list of recommended screenshots to capture from the live app at `ht
 
 ### Video
 
+**▶️ Demo Video:** [https://youtu.be/lJzXiPz1eA4](https://youtu.be/lJzXiPz1eA4)
+
+> A 12-second walkthrough of all 10 views: Dashboard → Clinical Search → Trial Modal → Eligibility Matcher → OpenFDA Drug Search → Company Insights → Trial Radar AI Agent.
+
 **Suggested Demo Video Script (2–3 min screen recording):**
 
 ```
@@ -274,6 +278,7 @@ Micro-interactions include:
 |----------|----------------|
 | **Live App** | `http://localhost:5173/` (run locally with `npm run dev`) |
 | **GitHub Repository** | https://github.com/saurabhdas2/ClinicalTrialRadar |
+| **Demo Video (YouTube)** | https://youtu.be/lJzXiPz1eA4 |
 | **ClinicalTrials.gov V2 API Docs** | https://clinicaltrials.gov/data-api/api |
 | **OpenFDA API Docs** | https://open.fda.gov/apis/drug/label/ |
 | **OpenFDA Brand Identity** | https://open.fda.gov |

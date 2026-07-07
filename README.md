@@ -8,7 +8,10 @@
 [![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-8-646cff?style=flat-square&logo=vite)](https://vite.dev)
 [![Recharts](https://img.shields.io/badge/Charts-Recharts-22b5bf?style=flat-square)](https://recharts.org)
+[![Demo Video](https://img.shields.io/badge/Demo-YouTube-ff0000?style=flat-square&logo=youtube)](https://youtu.be/lJzXiPz1eA4)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+
+> **▶️ Demo Video:** [https://youtu.be/lJzXiPz1eA4](https://youtu.be/lJzXiPz1eA4)
 
 ---
 
@@ -135,6 +138,7 @@ Inspired by the [openFDA](https://open.fda.gov) brand identity:
 - [`src/services/mockData.js`](src/services/mockData.js) — Curated demo dataset
 - [`src/index.css`](src/index.css) — Full design token system
 - [`KAGGLE_SUBMISSION.md`](KAGGLE_SUBMISSION.md) — Kaggle submission writeup
+- [`public/demo_video.mp4`](public/demo_video.mp4) — Demo video ([YouTube](https://youtu.be/lJzXiPz1eA4))
 
 ---
 

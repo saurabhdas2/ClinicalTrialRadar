@@ -1,16 +1,143 @@
-# React + Vite
+# 🔬 Clinical Trial Radar
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+> **Global Clinical Trial Intelligence Platform** — Live data from ClinicalTrials.gov V2 & OpenFDA, with an agentic AI layer for natural-language search, eligibility matching, and pharma analytics.
 
-Currently, two official plugins are available:
+![Clinical Trial Radar](./public/kaggle_thumbnail.png)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+[![Live APIs](https://img.shields.io/badge/APIs-ClinicalTrials.gov%20V2%20%7C%20OpenFDA-0071bc?style=flat-square)](https://clinicaltrials.gov)
+[![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react)](https://react.dev)
+[![Vite](https://img.shields.io/badge/Vite-8-646cff?style=flat-square&logo=vite)](https://vite.dev)
+[![Recharts](https://img.shields.io/badge/Charts-Recharts-22b5bf?style=flat-square)](https://recharts.org)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## ✨ Features
 
-## Expanding the Oxlint configuration
+| View | Description |
+|------|-------------|
+| 🏠 **Dashboard** | Global KPI cards + interactive Recharts (status pie, therapeutic area bar) + live trial feed |
+| 🔍 **Clinical Search** | Multi-filter search (keyword, condition, sponsor, phase, status) with trial detail modals |
+| 🩺 **Eligibility Matcher** | Patient intake → scored eligibility matching (Eligible / Partial / Ineligible) with per-criterion checklists |
+| 💊 **OpenFDA Drug Search** | Live FDA label lookup + side-by-side drug comparison table |
+| 🏢 **Company Insights** | Type-ahead company search + 3 interactive charts (timeline, status pie, phases bar) |
+| 🤖 **Trial Radar AI** | Natural-language agentic chat with real-time reasoning steps + inline dynamic widgets |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+---
+
+## 🚀 Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/<your-username>/ClinicalTrialRadar.git
+cd ClinicalTrialRadar
+
+# Install dependencies (Node 18+ required)
+npm install
+
+# Start development server
+npm run dev
+
+# Open in browser
+open http://localhost:5173
+```
+
+> **No API keys required.** Both ClinicalTrials.gov V2 and OpenFDA are fully public APIs.
+
+---
+
+## 🧠 Agentic Design
+
+The **Trial Radar AI Agent** (`src/services/agentEngine.js`) understands 5 intent classes from plain English:
+
+```
+"Find active breast cancer trials by Novartis"          → trial_search
+"Am I eligible for Alzheimer's trials at age 68?"       → eligibility_check
+"Compare side effects of Advil and Tylenol"             → drug_compare
+"Search FDA label for Keytruda"                         → drug_search
+"Show pipeline metrics for AstraZeneca"                 → company_insights
+```
+
+Each query triggers:
+1. **Intent parsing** — keyword extraction, entity recognition
+2. **Multi-step reasoning** — streamed step-by-step log in the UI
+3. **Live data fetch** — ClinicalTrials.gov V2 or OpenFDA
+4. **Dynamic widget rendering** — trial cards, eligibility grids, drug tables, company charts — inline in the chat thread
+
+---
+
+## 🏗️ Architecture
+
+```
+src/
+├── App.jsx                          # Sidebar navigation + view routing
+├── index.css                        # Design token system (OpenFDA-inspired)
+├── services/
+│   ├── mockData.js                  # 10 real trials + 5 FDA drugs + 6 company timelines
+│   ├── apiService.js                # ClinicalTrials.gov V2 + OpenFDA with auto-fallback
+│   └── agentEngine.js               # NLP intent parser + eligibility scorer
+├── components/
+│   └── TrialDetailsModal.jsx        # Shared reusable trial detail modal
+└── views/
+    ├── Dashboard.jsx                 # KPI hero + 2 Recharts + live feed
+    ├── TrialSearch.jsx              # Multi-filter + card grid + modal
+    ├── EligibilityMatcher.jsx       # Intake form + scoring engine
+    ├── DrugSearch.jsx               # FDA search + details panel + comparator
+    ├── CompanyInsights.jsx          # Type-ahead + 3 Recharts + phase table
+    └── AgentPanel.jsx               # Chat UI + reasoning steps + inline widgets
+```
+
+---
+
+## 📊 Data Sources
+
+| Source | Endpoint | Content |
+|--------|----------|---------|
+| [ClinicalTrials.gov V2](https://clinicaltrials.gov/data-api/api) | `/api/v2/studies` | 456,000+ global clinical trials |
+| [OpenFDA Drug Labels](https://open.fda.gov/apis/drug/label/) | `/drug/label.json` | FDA-approved drug labels, warnings, side effects |
+
+Both APIs are **publicly available with no authentication**. The app includes a high-fidelity mock dataset as an automatic fallback when APIs are slow or rate-limited.
+
+---
+
+## 🎨 Design System
+
+Inspired by the [openFDA](https://open.fda.gov) brand identity:
+
+- **Primary**: `#0071bc` (OpenFDA blue)
+- **Navy**: `#002b49` (Sidebar / hero backgrounds)
+- **Success**: `#10b981` (Eligible / active)
+- **Warning**: `#f59e0b` (Partial / pending)
+- **Danger**: `#ef4444` (Ineligible / terminated)
+- **Fonts**: Inter + Outfit (Google Fonts)
+- **Charts**: Recharts with custom color palette and interactive tooltips
+- **Animations**: `fadeInUp` card entrances, `translateY` hover lifts, spinning loaders
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 19 + Vite 8 |
+| Charts | Recharts |
+| Icons | Lucide React |
+| Styling | Vanilla CSS with CSS custom properties |
+| APIs | ClinicalTrials.gov V2 + OpenFDA (public) |
+| AI Layer | Client-side NLP engine (no LLM API needed) |
+
+---
+
+## 📁 Key Files
+
+- [`src/services/agentEngine.js`](src/services/agentEngine.js) — Agentic NLP + eligibility scoring
+- [`src/services/apiService.js`](src/services/apiService.js) — ClinicalTrials.gov + OpenFDA integration
+- [`src/services/mockData.js`](src/services/mockData.js) — Curated demo dataset
+- [`src/index.css`](src/index.css) — Full design token system
+- [`KAGGLE_SUBMISSION.md`](KAGGLE_SUBMISSION.md) — Kaggle submission writeup
+
+---
+
+## 📄 License
+
+MIT © 2026 — Data from ClinicalTrials.gov and OpenFDA is public domain.

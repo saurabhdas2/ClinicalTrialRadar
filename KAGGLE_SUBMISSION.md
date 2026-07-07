@@ -20,27 +20,11 @@ An agentic web app integrating ClinicalTrials.gov V2 & OpenFDA to deliver real-t
 
 ### Card and Thumbnail Image
 
-**Suggested Card Image Design:**
-- Background: Deep navy-to-royal-blue gradient (`#002b49` → `#0071bc`)
-- Centered bold white text: `"Clinical Trial Radar"`
-- Subtitle in light teal: `"456,000+ Global Studies · Live APIs · AI Agent"`
-- Lower right: small icons for ClinicalTrials.gov + OpenFDA logos
-- A pulse-dot animation indicator in top-right corner labeled `LIVE`
+**Generated Thumbnail:** `public/kaggle_thumbnail.png` ✅
 
-**File Name:** `thumbnail_clinical_trial_radar.png`
-**Recommended Dimensions:** 1280 × 720 px (16:9)
+![Clinical Trial Radar — Kaggle Thumbnail](file:///Users/saurabhdas/Documents/agy-projects/ClinicalTrialRadar/public/kaggle_thumbnail.png)
 
-**Thumbnail Text Hierarchy:**
-```
-[LIVE ●]
-──────────────────────────────────
-  🔬  Clinical Trial Radar
-──────────────────────────────────
-  Global Clinical Trial Intelligence
-  ClinicalTrials.gov V2 · OpenFDA · AI Agent
-──────────────────────────────────
-  456K+ Studies  |  8,945 Recruiting  |  2,480 Completed in 2026
-```
+> Upload `public/kaggle_thumbnail.png` directly to the Kaggle card image field.
 
 ---
 

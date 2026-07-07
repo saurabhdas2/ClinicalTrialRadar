@@ -9,18 +9,40 @@ const TrialSearch = () => {
     condition: '',
     sponsor: '',
     phase: 'ALL',
-    status: 'ALL'
+    status: 'ALL',
+    sort: 'StartDate:desc' // Default: Latest Start Date
   });
   const [trials, setTrials] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedTrial, setSelectedTrial] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const loadTrials = async (currentFilters) => {
+  // Pagination states
+  const [nextPageToken, setNextPageToken] = useState(null);
+  const [tokenHistory, setTokenHistory] = useState([null]);
+  const [pageIndex, setPageIndex] = useState(0);
+
+  const loadTrials = async (currentFilters, targetPageIndex = 0, customTokenHistory = tokenHistory) => {
     setLoading(true);
     try {
-      const results = await fetchClinicalTrials(currentFilters);
-      setTrials(results);
+      const activeToken = customTokenHistory[targetPageIndex] || null;
+      
+      const payload = await fetchClinicalTrials({
+        ...currentFilters,
+        pageToken: activeToken,
+        includePageToken: true
+      });
+
+      setTrials(payload.studies || []);
+      setNextPageToken(payload.nextPageToken || null);
+      setPageIndex(targetPageIndex);
+
+      // If we got a nextPageToken and it's not already in history for the next index, add it
+      if (payload.nextPageToken && !customTokenHistory[targetPageIndex + 1]) {
+        const updatedHistory = [...customTokenHistory];
+        updatedHistory[targetPageIndex + 1] = payload.nextPageToken;
+        setTokenHistory(updatedHistory);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -30,17 +52,22 @@ const TrialSearch = () => {
 
   // Perform search on mount
   useEffect(() => {
-    loadTrials(filters);
+    loadTrials(filters, 0, [null]);
   }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+  const handleInputChange = (nameOrEvent, val) => {
+    if (nameOrEvent?.target) {
+      const { name, value } = nameOrEvent.target;
+      setFilters(prev => ({ ...prev, [name]: value }));
+    } else {
+      setFilters(prev => ({ ...prev, [nameOrEvent]: val }));
+    }
   };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    loadTrials(filters);
+    setTokenHistory([null]);
+    loadTrials(filters, 0, [null]);
   };
 
   const handleReset = () => {
@@ -49,10 +76,24 @@ const TrialSearch = () => {
       condition: '',
       sponsor: '',
       phase: 'ALL',
-      status: 'ALL'
+      status: 'ALL',
+      sort: 'StartDate:desc'
     };
     setFilters(resetFilters);
-    loadTrials(resetFilters);
+    setTokenHistory([null]);
+    loadTrials(resetFilters, 0, [null]);
+  };
+
+  const handleNextPage = () => {
+    if (nextPageToken) {
+      loadTrials(filters, pageIndex + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (pageIndex > 0) {
+      loadTrials(filters, pageIndex - 1);
+    }
   };
 
   const openTrialDetails = (trial) => {
@@ -109,7 +150,7 @@ const TrialSearch = () => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', alignItems: 'flex-end' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', alignItems: 'flex-end' }}>
             <div className="form-group">
               <label className="form-label" htmlFor="phase">Study Phase</label>
               <select
@@ -142,6 +183,21 @@ const TrialSearch = () => {
                 <option value="COMPLETED">Completed</option>
                 <option value="TERMINATED">Terminated</option>
                 <option value="SUSPENDED">Suspended</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="sort">Order By</label>
+              <select
+                id="sort"
+                name="sort"
+                className="form-select"
+                value={filters.sort}
+                onChange={handleInputChange}
+              >
+                <option value="StartDate:desc">Latest Start Date</option>
+                <option value="LastUpdatePostDate:desc">Recently Updated</option>
+                <option value="@relevance">Search Relevance</option>
               </select>
             </div>
 
@@ -219,6 +275,29 @@ const TrialSearch = () => {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Pagination Controls */}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '32px' }}>
+            <button 
+              className="btn btn-secondary" 
+              onClick={handlePrevPage} 
+              disabled={pageIndex === 0 || loading}
+              style={{ padding: '8px 16px', minWidth: '120px' }}
+            >
+              Previous Page
+            </button>
+            <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-secondary)' }}>
+              Page {pageIndex + 1}
+            </span>
+            <button 
+              className="btn btn-secondary" 
+              onClick={handleNextPage} 
+              disabled={!nextPageToken || loading}
+              style={{ padding: '8px 16px', minWidth: '120px' }}
+            >
+              Next Page
+            </button>
           </div>
         </div>
       )}

@@ -172,7 +172,7 @@ export const mapRawDrugToUnified = (result) => {
  * @returns {Array} Filtered mock trials
  */
 const filterMockTrials = (filters = {}) => {
-  return MOCK_TRIALS.filter(trial => {
+  const filtered = MOCK_TRIALS.filter(trial => {
     // Keyword: match against title, summary, conditions, sponsor
     if (filters.keyword) {
       const kw = filters.keyword.toLowerCase();
@@ -198,6 +198,18 @@ const filterMockTrials = (filters = {}) => {
     }
     return true;
   });
+
+  // Apply sorting to mock data fallback
+  const sortOption = filters.sort || 'StudyFirstPostDate:desc';
+  if (sortOption === 'StartDate:desc' || sortOption === 'StudyFirstPostDate:desc') {
+    filtered.sort((a, b) => new Date(b.startDate || b.completionDate) - new Date(a.startDate || a.completionDate));
+  } else if (sortOption === 'LastUpdatePostDate:desc') {
+    filtered.sort((a, b) => new Date(b.completionDate) - new Date(a.completionDate));
+  } else if (sortOption === 'NctId:asc' || sortOption === 'NctId:desc') {
+    filtered.sort((a, b) => a.nctId.localeCompare(b.nctId));
+  }
+
+  return filtered;
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -233,6 +245,20 @@ export const fetchClinicalTrials = async (filters = {}) => {
     if (filters.status && filters.status !== 'ALL') params.append('filter.overallStatus', filters.status);
     if (filters.phase  && filters.phase  !== 'ALL') params.append('filter.phase', filters.phase);
 
+    // Apply token pagination if requested
+    if (filters.pageToken) {
+      params.append('pageToken', filters.pageToken);
+    }
+
+    // Apply sorting parameter (default to StudyFirstPostDate:desc if not specified)
+    if (filters.sort) {
+      // Map StartDate:desc to StudyFirstPostDate:desc because StartDate field type is unsupported for API sorting
+      const activeSort = filters.sort === 'StartDate:desc' ? 'StudyFirstPostDate:desc' : filters.sort;
+      params.append('sort', activeSort);
+    } else {
+      params.append('sort', 'StudyFirstPostDate:desc');
+    }
+
     params.append('pageSize', '30');
 
     const url = `https://clinicaltrials.gov/api/v2/studies?${params.toString()}`;
@@ -242,16 +268,30 @@ export const fetchClinicalTrials = async (filters = {}) => {
     const data = await response.json();
 
     if (data.studies?.length > 0) {
-      // Map V2 response to unified schema
-      return data.studies.map(mapRawStudyToUnified);
+      const mapped = data.studies.map(mapRawStudyToUnified);
+      if (filters.includePageToken) {
+        return {
+          studies: mapped,
+          nextPageToken: data.nextPageToken || null
+        };
+      }
+      return mapped;
     }
-    // Empty result from live API → use filtered mock data
-    return filterMockTrials(filters);
+
+    // Fallback logic
+    const fallbackResults = filterMockTrials(filters);
+    if (filters.includePageToken) {
+      return { studies: fallbackResults, nextPageToken: null };
+    }
+    return fallbackResults;
 
   } catch (error) {
-    // Network failure or CORS error → silent fallback
-    console.warn('[apiService] ClinicalTrials.gov V2 unavailable, using mock data:', error.message);
-    return filterMockTrials(filters);
+    console.warn('[apiService] ClinicalTrials.gov V2 query failed, falling back to mock:', error.message);
+    const fallbackResults = filterMockTrials(filters);
+    if (filters.includePageToken) {
+      return { studies: fallbackResults, nextPageToken: null };
+    }
+    return fallbackResults;
   }
 };
 

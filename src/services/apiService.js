@@ -421,14 +421,41 @@ export const fetchCompanyMetrics = async (companyName) => {
     // 2. Fetch approved drugs from OpenFDA
     let fdaDrugs = [];
     try {
-      const fdaUrl = `https://api.fda.gov/drug/label.json?search=openfda.manufacturer_name:"${encodeURIComponent(companyName)}"&limit=10`;
+      const fdaUrl = `https://api.fda.gov/drug/label.json?search=openfda.manufacturer_name:"${encodeURIComponent(companyName)}"&limit=100`;
       const fdaResponse = await fetch(fdaUrl);
       if (fdaResponse.ok) {
         const fdaData = await fdaResponse.json();
-        fdaDrugs = [...new Set((fdaData.results || [])
-          .map(r => r.openfda?.brand_name?.[0] || r.openfda?.generic_name?.[0])
-          .filter(Boolean)
-        )].slice(0, 6);
+        const extracted = (fdaData.results || []).flatMap(r => {
+          const brand = r.openfda?.brand_name?.[0];
+          const generic = r.openfda?.generic_name?.[0];
+          return [brand, generic].filter(Boolean);
+        });
+
+        // Format names nicely (title-case uppercase entries) and deduplicate case-insensitively
+        const seen = new Set();
+        fdaDrugs = extracted.map(d => {
+          return d === d.toUpperCase()
+            ? d.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+            : d;
+        }).filter(d => {
+          const lower = d.toLowerCase();
+          if (seen.has(lower)) return false;
+          seen.add(lower);
+          return true;
+        });
+
+        // Merge curated flagship drugs if available in mock data for famous sponsors
+        const matchedKey = Object.keys(MOCK_COMPANY_METRICS).find(
+          k => k.toLowerCase() === normalizedSponsor
+        );
+        if (matchedKey && MOCK_COMPANY_METRICS[matchedKey]?.approvedDrugs) {
+          MOCK_COMPANY_METRICS[matchedKey].approvedDrugs.forEach(cd => {
+            if (!seen.has(cd.toLowerCase())) {
+              seen.add(cd.toLowerCase());
+              fdaDrugs.unshift(cd);
+            }
+          });
+        }
       }
     } catch (e) {
       console.warn('[apiService] OpenFDA manufacturer search failed:', e.message);

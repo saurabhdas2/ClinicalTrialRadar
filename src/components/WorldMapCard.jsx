@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Globe, MapPin, Activity, Navigation, Info } from 'lucide-react';
+import { Globe, MapPin, Activity, Navigation, Search } from 'lucide-react';
 import { WORLD_MAP_PATH } from './worldMapPath';
 
 const WorldMapCard = ({ sites = [], totalActiveTrials }) => {
   const [hoveredSite, setHoveredSite] = useState(null);
+  const [showTopLimit, setShowTopLimit] = useState(25);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Dynamic Top 20 countries by active trial site volume
+  // Dynamic candidate countries ranked by active trial site volume
   const defaultSites = [
     { country: 'United States', code: 'USA', flag: '🇺🇸', x: 23.41, y: 29.39, activeCount: 32652 },
     { country: 'China', code: 'CHN', flag: '🇨🇳', x: 78.94, y: 30.08, activeCount: 14352 },
@@ -26,12 +28,25 @@ const WorldMapCard = ({ sites = [], totalActiveTrials }) => {
     { country: 'Israel', code: 'ISR', flag: '🇮🇱', x: 59.68, y: 32.75, activeCount: 2244 },
     { country: 'Denmark', code: 'DNK', flag: '🇩🇰', x: 52.64, y: 18.74, activeCount: 2149 },
     { country: 'Switzerland', code: 'CHE', flag: '🇨🇭', x: 52.29, y: 23.99, activeCount: 1997 },
-    { country: 'Sweden', code: 'SWE', flag: '🇸🇪', x: 55.18, y: 16.60, activeCount: 1918 }
+    { country: 'Sweden', code: 'SWE', flag: '🇸🇪', x: 55.18, y: 16.60, activeCount: 1918 },
+    { country: 'Brazil', code: 'BRA', flag: '🇧🇷', x: 35.58, y: 57.91, activeCount: 1872 },
+    { country: 'Mexico', code: 'MEX', flag: '🇲🇽', x: 21.51, y: 36.87, activeCount: 1459 },
+    { country: 'Austria', code: 'AUT', flag: '🇦🇹', x: 54.04, y: 23.60, activeCount: 1441 },
+    { country: 'Argentina', code: 'ARG', flag: '🇦🇷', x: 32.33, y: 71.34, activeCount: 1132 },
+    { country: 'India', code: 'IND', flag: '🇮🇳', x: 71.93, y: 38.56, activeCount: 948 }
   ];
 
-  const siteList = (sites && sites.length > 0) ? sites : defaultSites;
-  const maxCount = Math.max(...siteList.map(s => s.activeCount || 1));
-  const totalGlobalActive = siteList.reduce((acc, s) => acc + (s.activeCount || 0), 0);
+  const fullSiteList = (sites && sites.length > 0) ? sites : defaultSites;
+  
+  // Filter by search or limit
+  const filteredSites = fullSiteList.filter(s => 
+    !searchTerm || s.country.toLowerCase().includes(searchTerm.toLowerCase()) || s.code.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  const siteList = searchTerm ? filteredSites : filteredSites.slice(0, showTopLimit);
+
+  const maxCount = Math.max(...fullSiteList.map(s => s.activeCount || 1));
+  const totalGlobalActive = fullSiteList.reduce((acc, s) => acc + (s.activeCount || 0), 0);
   const activeStudiesCountText = totalActiveTrials ? `${totalActiveTrials.toLocaleString()}` : '87,376';
 
   return (
@@ -201,9 +216,65 @@ const WorldMapCard = ({ sites = [], totalActiveTrials }) => {
           display: 'flex', 
           flexDirection: 'column' 
         }}>
-          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Navigation size={16} color="var(--primary)" />
-            <span>Top 20 Active Trial Site Hubs</span>
+          <div style={{ marginBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Navigation size={16} color="var(--primary)" />
+                <span>Active Trial Site Hubs</span>
+              </div>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button
+                  onClick={() => { setShowTopLimit(20); setSearchTerm(''); }}
+                  style={{
+                    padding: '2px 8px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    borderRadius: '4px',
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: showTopLimit === 20 && !searchTerm ? 'var(--primary)' : 'white',
+                    color: showTopLimit === 20 && !searchTerm ? 'white' : 'var(--text-secondary)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Top 20
+                </button>
+                <button
+                  onClick={() => { setShowTopLimit(25); setSearchTerm(''); }}
+                  style={{
+                    padding: '2px 8px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    borderRadius: '4px',
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: showTopLimit === 25 && !searchTerm ? 'var(--primary)' : 'white',
+                    color: showTopLimit === 25 && !searchTerm ? 'white' : 'var(--text-secondary)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Top 25
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Country Search */}
+            <div style={{ position: 'relative' }}>
+              <Search size={14} color="var(--text-light)" style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)' }} />
+              <input
+                type="text"
+                placeholder="Search country (e.g. India)..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '5px 8px 5px 28px',
+                  fontSize: '12px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-color)',
+                  outline: 'none',
+                  backgroundColor: 'white'
+                }}
+              />
+            </div>
           </div>
 
           <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>

@@ -801,7 +801,7 @@ export const fetchGlobalStats = async () => {
       activeCount: countryResults[i]?.totalCount || 0,
       x: +(((c.lng + 180) / 360) * 100).toFixed(2),
       y: +(((90 - c.lat) / 180) * 100).toFixed(2)
-    })).sort((a, b) => b.activeCount - a.activeCount).slice(0, 20);
+    })).sort((a, b) => b.activeCount - a.activeCount);
 
     return {
       totalTrials: total,

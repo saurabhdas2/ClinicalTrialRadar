@@ -707,12 +707,15 @@ export const fetchCompanyMetrics = async (companyName) => {
 export const fetchGlobalStats = async () => {
   try {
     const currentYear = new Date().getFullYear();
-    const sponsors = ['Pfizer', 'GlaxoSmithKline', 'Novartis', 'Merck', 'AstraZeneca', 'Sanofi', 'Roche', 'Eli Lilly', 'Bristol Myers Squibb', 'Janssen'];
-    const sponsorColors = ['#0071bc', '#14b8a6', '#0ea5e9', '#f59e0b', '#ef4444', '#6366f1', '#10b981', '#f97316', '#ec4899', '#8b5cf6'];
+    const sponsors = ['AstraZeneca', 'Merck', 'Novartis', 'Bristol Myers Squibb', 'Pfizer', 'Roche', 'Janssen', 'Eli Lilly', 'Sanofi', 'GlaxoSmithKline'];
 
     const sponsorPromises = sponsors.map(s => 
-      fetch(`https://clinicaltrials.gov/api/v2/studies?query.spons=${encodeURIComponent(s)}&filter.overallStatus=COMPLETED&countTotal=true&pageSize=0`)
-        .then(r => r.ok ? r.json() : null)
+      Promise.all([
+        fetch(`https://clinicaltrials.gov/api/v2/studies?query.spons=${encodeURIComponent(s)}&filter.overallStatus=RECRUITING,ACTIVE_NOT_RECRUITING&countTotal=true&pageSize=0`)
+          .then(r => r.ok ? r.json() : null),
+        fetch(`https://clinicaltrials.gov/api/v2/studies?query.spons=${encodeURIComponent(s)}&query.term=AREA%5BCompletionDate%5D${currentYear}&filter.overallStatus=COMPLETED&countTotal=true&pageSize=0`)
+          .then(r => r.ok ? r.json() : null)
+      ])
     );
 
     const [
@@ -755,9 +758,9 @@ export const fetchGlobalStats = async () => {
 
     const completedByCompany = sponsors.map((s, i) => ({
       name: s,
-      count: sponsorResults[i]?.totalCount || 0,
-      color: sponsorColors[i]
-    })).sort((a, b) => b.count - a.count);
+      active: sponsorResults[i]?.[0]?.totalCount || 0,
+      completed2026: sponsorResults[i]?.[1]?.totalCount || 0
+    })).sort((a, b) => (b.active + b.completed2026) - (a.active + a.completed2026));
 
     return {
       totalTrials: total,
@@ -790,16 +793,16 @@ export const fetchGlobalStats = async () => {
       completedAllTime: 325239,
       completedThisYear: 6455,
       completedByCompany: [
-        { name: 'Pfizer', count: 4465, color: '#0071bc' },
-        { name: 'GlaxoSmithKline', count: 4010, color: '#14b8a6' },
-        { name: 'Novartis', count: 3508, color: '#0ea5e9' },
-        { name: 'Merck', count: 3346, color: '#f59e0b' },
-        { name: 'AstraZeneca', count: 3308, color: '#ef4444' },
-        { name: 'Sanofi', count: 2547, color: '#6366f1' },
-        { name: 'Roche', count: 2232, color: '#10b981' },
-        { name: 'Eli Lilly', count: 2209, color: '#f97316' },
-        { name: 'Bristol Myers Squibb', count: 1912, color: '#ec4899' },
-        { name: 'Janssen', count: 1772, color: '#8b5cf6' }
+        { name: 'AstraZeneca', active: 734, completed2026: 54 },
+        { name: 'Merck', active: 698, completed2026: 70 },
+        { name: 'Novartis', active: 490, completed2026: 35 },
+        { name: 'Pfizer', active: 419, completed2026: 39 },
+        { name: 'Bristol Myers Squibb', active: 423, completed2026: 31 },
+        { name: 'Roche', active: 381, completed2026: 16 },
+        { name: 'Eli Lilly', active: 336, completed2026: 45 },
+        { name: 'Janssen', active: 353, completed2026: 20 },
+        { name: 'Sanofi', active: 273, completed2026: 35 },
+        { name: 'GlaxoSmithKline', active: 235, completed2026: 14 }
       ],
       therapeuticAreas: [
         { name: 'Oncology', count: 122108, color: '#0071bc' },

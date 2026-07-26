@@ -208,15 +208,15 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Chart 3: Completed Trials Breakup Across Major Pharmaceutical Companies */}
-      <div className="card" style={{ height: '440px', marginTop: '24px', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>
+      {/* Chart 3: Company Trial Portfolio: Active Trials vs Completed in 2026 */}
+      <div className="card" style={{ height: '480px', marginTop: '24px', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>
         <div className="section-header">
           <div className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Award size={20} color="var(--primary)" />
-            <span>Completed Trials Breakup Across Major Pharmaceutical Companies</span>
+            <span>Company Trial Portfolio: Active Trials vs Completed in 2026</span>
           </div>
           <div className="section-subtitle">
-            Total completed clinical studies registered by leading global pharmaceutical sponsors (ClinicalTrials.gov V2)
+            Comparison of active clinical trials (recruiting/enrolling) and studies completed in the current calendar year (2026) across leading pharmaceutical sponsors
           </div>
         </div>
         <div style={{ flex: 1, minHeight: 0, marginTop: '10px' }}>
@@ -224,7 +224,7 @@ const Dashboard = () => {
             <BarChart
               data={globalStats.completedByCompany || []}
               layout="vertical"
-              margin={{ top: 10, right: 40, left: 20, bottom: 10 }}
+              margin={{ top: 10, right: 40, left: 20, bottom: 20 }}
             >
               <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
               <XAxis type="number" tickFormatter={(v) => v.toLocaleString()} />
@@ -236,12 +236,10 @@ const Dashboard = () => {
                 width={150}
                 tick={{ fontSize: 13, fontWeight: '600', fill: 'var(--text-secondary)' }}
               />
-              <Tooltip formatter={(value) => [`${value.toLocaleString()} Completed Studies`, 'Total Completed']} />
-              <Bar dataKey="count" radius={[0, 6, 6, 0]}>
-                {(globalStats.completedByCompany || []).map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
-                ))}
-              </Bar>
+              <Tooltip formatter={(value, name) => [`${value.toLocaleString()} Studies`, name]} />
+              <Legend verticalAlign="top" height={36} iconType="circle" />
+              <Bar dataKey="active" name="Active Trials" fill="#0071bc" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="completed2026" name="Completed in 2026" fill="#10b981" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

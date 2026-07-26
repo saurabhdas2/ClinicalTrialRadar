@@ -709,18 +709,18 @@ export const fetchGlobalStats = async () => {
     const currentYear = new Date().getFullYear();
     const sponsors = ['AstraZeneca', 'Merck', 'Novartis', 'Bristol Myers Squibb', 'Pfizer', 'Roche', 'Janssen', 'Eli Lilly', 'Sanofi', 'GlaxoSmithKline'];
     const countries = [
-      { country: 'United States', code: 'USA', flag: '🇺🇸', x: 22, y: 38 },
-      { country: 'China', code: 'CHN', flag: '🇨🇳', x: 78, y: 42 },
-      { country: 'France', code: 'FRA', flag: '🇫🇷', x: 48, y: 32 },
-      { country: 'Italy', code: 'ITA', flag: '🇮🇹', x: 53, y: 36 },
-      { country: 'Canada', code: 'CAN', flag: '🇨🇦', x: 24, y: 24 },
-      { country: 'Spain', code: 'ESP', flag: '🇪🇸', x: 45, y: 38 },
-      { country: 'United Kingdom', code: 'GBR', flag: '🇬🇧', x: 46, y: 28 },
-      { country: 'Germany', code: 'DEU', flag: '🇩🇪', x: 52, y: 30 },
-      { country: 'Australia', code: 'AUS', flag: '🇦🇺', x: 84, y: 76 },
-      { country: 'Japan', code: 'JPN', flag: '🇯🇵', x: 86, y: 40 },
-      { country: 'Brazil', code: 'BRA', flag: '🇧🇷', x: 34, y: 68 },
-      { country: 'India', code: 'IND', flag: '🇮🇳', x: 70, y: 48 }
+      { country: 'United States', code: 'USA', flag: '🇺🇸', x: 20, y: 35 },
+      { country: 'China', code: 'CHN', flag: '🇨🇳', x: 77, y: 36 },
+      { country: 'France', code: 'FRA', flag: '🇫🇷', x: 48.5, y: 28 },
+      { country: 'Italy', code: 'ITA', flag: '🇮🇹', x: 53.5, y: 30 },
+      { country: 'Canada', code: 'CAN', flag: '🇨🇦', x: 20, y: 22 },
+      { country: 'Spain', code: 'ESP', flag: '🇪🇸', x: 46.5, y: 32 },
+      { country: 'United Kingdom', code: 'GBR', flag: '🇬🇧', x: 45.5, y: 22 },
+      { country: 'Germany', code: 'DEU', flag: '🇩🇪', x: 51.5, y: 24 },
+      { country: 'Australia', code: 'AUS', flag: '🇦🇺', x: 83.5, y: 74 },
+      { country: 'Japan', code: 'JPN', flag: '🇯🇵', x: 87.5, y: 33 },
+      { country: 'Brazil', code: 'BRA', flag: '🇧🇷', x: 32, y: 68 },
+      { country: 'India', code: 'IND', flag: '🇮🇳', x: 70.5, y: 44 }
     ];
 
     const sponsorPromises = sponsors.map(s => 

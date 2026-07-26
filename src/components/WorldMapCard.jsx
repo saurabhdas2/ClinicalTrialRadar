@@ -6,18 +6,18 @@ const WorldMapCard = ({ sites = [] }) => {
 
   // Fallback defaults if site array is loading
   const defaultSites = [
-    { country: 'United States', code: 'USA', flag: '🇺🇸', x: 22, y: 38, activeCount: 32652 },
-    { country: 'China', code: 'CHN', flag: '🇨🇳', x: 78, y: 42, activeCount: 14352 },
-    { country: 'France', code: 'FRA', flag: '🇫🇷', x: 48, y: 32, activeCount: 8257 },
-    { country: 'Italy', code: 'ITA', flag: '🇮🇹', x: 53, y: 36, activeCount: 6038 },
-    { country: 'Canada', code: 'CAN', flag: '🇨🇦', x: 24, y: 24, activeCount: 5756 },
-    { country: 'Spain', code: 'ESP', flag: '🇪🇸', x: 45, y: 38, activeCount: 5107 },
-    { country: 'United Kingdom', code: 'GBR', flag: '🇬🇧', x: 46, y: 28, activeCount: 4705 },
-    { country: 'Germany', code: 'DEU', flag: '🇩🇪', x: 52, y: 30, activeCount: 4647 },
-    { country: 'Australia', code: 'AUS', flag: '🇦🇺', x: 84, y: 76, activeCount: 3034 },
-    { country: 'Japan', code: 'JPN', flag: '🇯🇵', x: 86, y: 40, activeCount: 2294 },
-    { country: 'Brazil', code: 'BRA', flag: '🇧🇷', x: 34, y: 68, activeCount: 1872 },
-    { country: 'India', code: 'IND', flag: '🇮🇳', x: 70, y: 48, activeCount: 948 }
+    { country: 'United States', code: 'USA', flag: '🇺🇸', x: 20, y: 35, activeCount: 32652 },
+    { country: 'China', code: 'CHN', flag: '🇨🇳', x: 77, y: 36, activeCount: 14352 },
+    { country: 'France', code: 'FRA', flag: '🇫🇷', x: 48.5, y: 28, activeCount: 8257 },
+    { country: 'Italy', code: 'ITA', flag: '🇮🇹', x: 53.5, y: 30, activeCount: 6038 },
+    { country: 'Canada', code: 'CAN', flag: '🇨🇦', x: 20, y: 22, activeCount: 5756 },
+    { country: 'Spain', code: 'ESP', flag: '🇪🇸', x: 46.5, y: 32, activeCount: 5107 },
+    { country: 'United Kingdom', code: 'GBR', flag: '🇬🇧', x: 45.5, y: 22, activeCount: 4705 },
+    { country: 'Germany', code: 'DEU', flag: '🇩🇪', x: 51.5, y: 24, activeCount: 4647 },
+    { country: 'Australia', code: 'AUS', flag: '🇦🇺', x: 83.5, y: 74, activeCount: 3034 },
+    { country: 'Japan', code: 'JPN', flag: '🇯🇵', x: 87.5, y: 33, activeCount: 2294 },
+    { country: 'Brazil', code: 'BRA', flag: '🇧🇷', x: 32, y: 68, activeCount: 1872 },
+    { country: 'India', code: 'IND', flag: '🇮🇳', x: 70.5, y: 44, activeCount: 948 }
   ];
 
   const siteList = (sites && sites.length > 0) ? sites : defaultSites;
@@ -73,19 +73,25 @@ const WorldMapCard = ({ sites = [] }) => {
             <line x1="0" y1="250" x2="1000" y2="250" stroke="#334155" strokeWidth="1" strokeDasharray="4,4" opacity="0.4" />
             <line x1="500" y1="0" x2="500" y2="500" stroke="#334155" strokeWidth="1" strokeDasharray="4,4" opacity="0.4" />
 
-            {/* Stylized Continent Outlines */}
+            {/* Realistic SVG World Map Continents */}
             {/* North America */}
-            <path d="M 120 80 Q 200 60 280 90 T 320 180 T 260 260 T 180 280 T 140 200 Z" fill="#1e293b" stroke="#334155" strokeWidth="1" opacity="0.8" />
+            <path d="M 75,50 L 160,35 L 280,30 L 320,50 L 300,100 L 260,110 L 290,160 L 260,210 L 210,230 L 180,260 L 150,220 L 170,160 L 140,140 L 90,130 Z" fill="#1e293b" stroke="#334155" strokeWidth="1.2" opacity="0.85" />
+            {/* Greenland */}
+            <path d="M 310,20 L 380,15 L 410,40 L 350,75 L 300,50 Z" fill="#1e293b" stroke="#334155" strokeWidth="1" opacity="0.7" />
             {/* South America */}
-            <path d="M 280 270 Q 350 290 370 380 T 310 470 T 270 360 Z" fill="#1e293b" stroke="#334155" strokeWidth="1" opacity="0.8" />
+            <path d="M 255,270 L 300,260 L 360,290 L 370,360 L 330,440 L 290,465 L 275,410 L 265,330 Z" fill="#1e293b" stroke="#334155" strokeWidth="1.2" opacity="0.85" />
             {/* Europe */}
-            <path d="M 460 80 Q 550 70 580 140 T 520 200 T 450 160 Z" fill="#1e293b" stroke="#334155" strokeWidth="1" opacity="0.8" />
+            <path d="M 460,85 L 510,70 L 550,85 L 560,130 L 530,170 L 485,185 L 450,150 L 470,120 Z" fill="#1e293b" stroke="#334155" strokeWidth="1.2" opacity="0.85" />
+            {/* United Kingdom & Ireland */}
+            <path d="M 445,95 L 462,90 L 468,120 L 452,125 Z" fill="#1e293b" stroke="#334155" strokeWidth="1" opacity="0.85" />
             {/* Africa */}
-            <path d="M 440 200 Q 560 210 580 320 T 520 440 T 450 320 Z" fill="#1e293b" stroke="#334155" strokeWidth="1" opacity="0.8" />
+            <path d="M 435,190 L 535,190 L 575,230 L 560,310 L 525,410 L 485,410 L 445,300 L 415,250 Z" fill="#1e293b" stroke="#334155" strokeWidth="1.2" opacity="0.85" />
             {/* Asia */}
-            <path d="M 580 80 Q 750 60 880 120 T 850 280 T 680 260 T 580 180 Z" fill="#1e293b" stroke="#334155" strokeWidth="1" opacity="0.8" />
+            <path d="M 560,75 L 850,55 L 910,120 L 890,200 L 850,250 L 780,240 L 730,300 L 680,290 L 650,250 L 580,230 L 560,140 Z" fill="#1e293b" stroke="#334155" strokeWidth="1.2" opacity="0.85" />
+            {/* Japan */}
+            <path d="M 870,140 L 890,150 L 878,190 L 860,165 Z" fill="#1e293b" stroke="#334155" strokeWidth="1" opacity="0.85" />
             {/* Australia */}
-            <path d="M 780 340 Q 880 330 900 420 T 800 440 Z" fill="#1e293b" stroke="#334155" strokeWidth="1" opacity="0.8" />
+            <path d="M 780,335 L 885,325 L 905,395 L 845,435 L 775,405 Z" fill="#1e293b" stroke="#334155" strokeWidth="1.2" opacity="0.85" opacity="0.85" />
           </svg>
 
           {/* Interactive Pulsing Hotspots Layer */}

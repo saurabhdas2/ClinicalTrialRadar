@@ -142,20 +142,20 @@ const Dashboard = () => {
                 <Pie
                   data={globalStats.statusDistribution}
                   cx="50%"
-                  cy="45%"
-                  innerRadius={60}
-                  outerRadius={100}
+                  cy="42%"
+                  innerRadius={55}
+                  outerRadius={85}
                   paddingAngle={4}
                   dataKey="value"
-                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                  label={({ percent }) => (percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : '')}
                   labelLine={false}
                 >
                   {globalStats.statusDistribution.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => [`${value} Trials`, 'Count']} />
-                <Legend verticalAlign="bottom" height={36} />
+                <Tooltip formatter={(value, name) => [`${value.toLocaleString()} Trials`, name]} />
+                <Legend verticalAlign="bottom" height={40} iconType="circle" />
               </PieChart>
             </ResponsiveContainer>
           </div>

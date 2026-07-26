@@ -217,18 +217,20 @@ const CompanyInsights = () => {
                     <Pie
                       data={companyData.status}
                       cx="50%"
-                      cy="45%"
-                      innerRadius={50}
-                      outerRadius={80}
+                      cy="42%"
+                      innerRadius={45}
+                      outerRadius={75}
                       paddingAngle={3}
                       dataKey="value"
-                      label={({ name, value }) => `${name}: ${value}`}
+                      label={({ percent }) => (percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : '')}
+                      labelLine={false}
                     >
                       {companyData.status.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => [`${value} Trials`, 'Count']} />
+                    <Tooltip formatter={(value, name) => [`${value} Trials`, name]} />
+                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
               </div>

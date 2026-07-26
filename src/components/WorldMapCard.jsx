@@ -239,19 +239,19 @@ const WorldMapCard = ({ sites = [], totalActiveTrials }) => {
                   Top 20
                 </button>
                 <button
-                  onClick={() => { setShowTopLimit(25); setSearchTerm(''); }}
+                  onClick={() => { setShowTopLimit(50); setSearchTerm(''); }}
                   style={{
                     padding: '2px 8px',
                     fontSize: '11px',
                     fontWeight: '600',
                     borderRadius: '4px',
                     border: '1px solid var(--border-color)',
-                    backgroundColor: showTopLimit === 25 && !searchTerm ? 'var(--primary)' : 'white',
-                    color: showTopLimit === 25 && !searchTerm ? 'white' : 'var(--text-secondary)',
+                    backgroundColor: showTopLimit === 50 && !searchTerm ? 'var(--primary)' : 'white',
+                    color: showTopLimit === 50 && !searchTerm ? 'white' : 'var(--text-secondary)',
                     cursor: 'pointer'
                   }}
                 >
-                  Top 25
+                  Top 50
                 </button>
               </div>
             </div>

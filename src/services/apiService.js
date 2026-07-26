@@ -733,7 +733,32 @@ export const fetchGlobalStats = async () => {
       { country: 'Mexico', code: 'MEX', flag: '🇲🇽', lat: 23.6345, lng: -102.5528 },
       { country: 'Argentina', code: 'ARG', flag: '🇦🇷', lat: -38.4161, lng: -63.6167 },
       { country: 'Taiwan', code: 'TWN', flag: '🇹🇼', lat: 23.6978, lng: 120.9605 },
-      { country: 'Austria', code: 'AUT', flag: '🇦🇹', lat: 47.5162, lng: 14.5501 }
+      { country: 'Austria', code: 'AUT', flag: '🇦🇹', lat: 47.5162, lng: 14.5501 },
+      { country: 'Egypt', code: 'EGY', flag: '🇪🇬', lat: 26.8206, lng: 30.8025 },
+      { country: 'South Africa', code: 'ZAF', flag: '🇿🇦', lat: -30.5595, lng: 22.9375 },
+      { country: 'Greece', code: 'GRC', flag: '🇬🇷', lat: 39.0742, lng: 21.8243 },
+      { country: 'Hungary', code: 'HUN', flag: '🇭🇺', lat: 47.1625, lng: 19.5033 },
+      { country: 'Czech Republic', code: 'CZE', flag: '🇨🇿', lat: 49.8175, lng: 15.4730 },
+      { country: 'Portugal', code: 'PRT', flag: '🇵🇹', lat: 39.3999, lng: -8.2245 },
+      { country: 'Finland', code: 'FIN', flag: '🇫🇮', lat: 61.9241, lng: 25.7482 },
+      { country: 'Norway', code: 'NOR', flag: '🇳🇴', lat: 60.4720, lng: 8.4689 },
+      { country: 'Ireland', code: 'IRL', flag: '🇮🇪', lat: 53.4129, lng: -8.2439 },
+      { country: 'New Zealand', code: 'NZL', flag: '🇳🇿', lat: -40.9006, lng: 174.8860 },
+      { country: 'Singapore', code: 'SGP', flag: '🇸🇬', lat: 1.3521, lng: 103.8198 },
+      { country: 'Malaysia', code: 'MYS', flag: '🇲🇾', lat: 4.2105, lng: 101.9758 },
+      { country: 'Thailand', code: 'THA', flag: '🇹🇭', lat: 15.8700, lng: 100.9925 },
+      { country: 'Colombia', code: 'COL', flag: '🇨🇴', lat: 4.5709, lng: -74.2973 },
+      { country: 'Chile', code: 'CHL', flag: '🇨🇱', lat: -35.6751, lng: -71.5430 },
+      { country: 'Peru', code: 'PER', flag: '🇵🇪', lat: -9.1900, lng: -75.0152 },
+      { country: 'Saudi Arabia', code: 'SAU', flag: '🇸🇦', lat: 23.8859, lng: 45.0792 },
+      { country: 'United Arab Emirates', code: 'ARE', flag: '🇦🇪', lat: 23.4241, lng: 53.8478 },
+      { country: 'Pakistan', code: 'PAK', flag: '🇵🇰', lat: 30.3753, lng: 69.3451 },
+      { country: 'Indonesia', code: 'IDN', flag: '🇮🇩', lat: -0.7893, lng: 113.9213 },
+      { country: 'Philippines', code: 'PHL', flag: '🇵🇭', lat: 12.8797, lng: 121.7740 },
+      { country: 'Romania', code: 'ROU', flag: '🇷🇴', lat: 45.9432, lng: 24.9668 },
+      { country: 'Bulgaria', code: 'BGR', flag: '🇧🇬', lat: 42.7339, lng: 25.4858 },
+      { country: 'Slovakia', code: 'SVK', flag: '🇸🇰', lat: 48.6690, lng: 19.6990 },
+      { country: 'Ukraine', code: 'UKR', flag: '🇺🇦', lat: 48.3794, lng: 31.1656 }
     ];
 
     const sponsorPromises = sponsors.map(s => 

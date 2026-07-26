@@ -171,8 +171,8 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
           {/* Interactive Row 1: Trial Pipeline timeline (Line/Area Chart) */}
           <div className="card" style={{ height: '380px', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>
             <div className="section-header">
-              <div className="section-title">Clinical Trials Timeline (2018 - 2026)</div>
-              <div className="section-subtitle">Active vs Completed Studies over the years</div>
+              <div className="section-title">Clinical Trials Timeline (10-Year Trend: 2017 - 2026)</div>
+              <div className="section-subtitle">Active vs Completed Studies over the last 10 years</div>
             </div>
             
             <div style={{ flex: 1, minHeight: 0 }}>

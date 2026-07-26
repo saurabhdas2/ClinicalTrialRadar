@@ -271,6 +271,7 @@ export const MOCK_DRUGS = {
 export const MOCK_COMPANY_METRICS = {
   "Pfizer": {
     years: [
+      { year: "2017", active: 40, completed: 25 },
       { year: "2018", active: 45, completed: 30 },
       { year: "2019", active: 50, completed: 35 },
       { year: "2020", active: 65, completed: 42 },
@@ -304,6 +305,7 @@ export const MOCK_COMPANY_METRICS = {
   },
   "Novartis": {
     years: [
+      { year: "2017", active: 32, completed: 20 },
       { year: "2018", active: 38, completed: 25 },
       { year: "2019", active: 42, completed: 28 },
       { year: "2020", active: 48, completed: 30 },
@@ -337,6 +339,7 @@ export const MOCK_COMPANY_METRICS = {
   },
   "Roche": {
     years: [
+      { year: "2017", active: 35, completed: 18 },
       { year: "2018", active: 40, completed: 22 },
       { year: "2019", active: 45, completed: 26 },
       { year: "2020", active: 52, completed: 31 },
@@ -370,6 +373,7 @@ export const MOCK_COMPANY_METRICS = {
   },
   "Merck": {
     years: [
+      { year: "2017", active: 25, completed: 14 },
       { year: "2018", active: 30, completed: 18 },
       { year: "2019", active: 35, completed: 20 },
       { year: "2020", active: 42, completed: 25 },
@@ -403,6 +407,7 @@ export const MOCK_COMPANY_METRICS = {
   },
   "Moderna": {
     years: [
+      { year: "2017", active: 3, completed: 0 },
       { year: "2018", active: 5, completed: 1 },
       { year: "2019", active: 8, completed: 3 },
       { year: "2020", active: 18, completed: 6 },
@@ -435,6 +440,7 @@ export const MOCK_COMPANY_METRICS = {
   },
   "AstraZeneca": {
     years: [
+      { year: "2017", active: 30, completed: 16 },
       { year: "2018", active: 35, completed: 20 },
       { year: "2019", active: 40, completed: 24 },
       { year: "2020", active: 48, completed: 28 },

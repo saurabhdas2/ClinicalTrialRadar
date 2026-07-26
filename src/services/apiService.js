@@ -602,9 +602,9 @@ export const fetchCompanyMetrics = async (companyName) => {
       .map(([name, count]) => ({ name, count, percentage: totalCounted ? Math.round((count / totalCounted) * 100) : 0 }))
       .sort((a, b) => b.count - a.count);
 
-    // 7. Process years timeline (2018–2026)
+    // 7. Process years timeline (2017–2026: 10 years of historical data)
     const yearsMap = {};
-    for (let y = 2018; y <= 2026; y++) {
+    for (let y = 2017; y <= 2026; y++) {
       yearsMap[y] = { active: 0, completed: 0 };
     }
     studies.forEach(s => {
@@ -678,8 +678,8 @@ export const fetchCompanyMetrics = async (companyName) => {
     return {
       name: companyName,
       cleanName: searchSponsorParam,
-      years: Array.from({ length: 9 }, (_, i) => ({
-        year:      String(2018 + i),
+      years: Array.from({ length: 10 }, (_, i) => ({
+        year:      String(2017 + i),
         active:    h(20, 10) + i * 2,
         completed: h(12, 5)  + i
       })),

@@ -408,6 +408,55 @@ export const fetchOpenFDADrug = async (query) => {
  * @param {string} companyName - Pharmaceutical company name
  * @returns {Promise<object>} Company metrics object
  */
+// Curated historical FDA approval years for major pharmaceutical products
+const KNOWN_APPROVAL_YEARS = {
+  'xarelto': '2011',
+  'invokana': '2013',
+  'darzalex': '2015',
+  'tremfya': '2017',
+  'imbruvica': '2013',
+  'stelara': '2009',
+  'concerta': '2000',
+  'topamax': '1996',
+  'yondelis': '2015',
+  'prezista': '2006',
+  'carvykti': '2022',
+  'tecvayli': '2022',
+  'talvey': '2023',
+  'spravato': '2019',
+  'invega': '2006',
+  'paxlovid': '2021',
+  'lipitor': '1996',
+  'prevnar': '2000',
+  'viagra': '1998',
+  'advil': '1984',
+  'comirnaty': '2021',
+  'keytruda': '2014',
+  'gardasil': '2006',
+  'januvia': '2006',
+  'singulair': '1998',
+  'entresto': '2015',
+  'gilenya': '2010',
+  'cosentyx': '2015',
+  'kisqali': '2017',
+  'zolgensma': '2019',
+  'herceptin': '1998',
+  'avastin': '2004',
+  'ocrevus': '2017',
+  'rituxan': '1997',
+  'alecensa': '2015',
+  'farxiga': '2014',
+  'tagrisso': '2015',
+  'imfinzi': '2017',
+  'lynparza': '2014',
+  'symbicort': '2006',
+  'spikevax': '2021',
+  'humira': '2002',
+  'eliquis': '2012',
+  'opdivo': '2014',
+  'revlimid': '2005'
+};
+
 export const fetchCompanyMetrics = async (companyName) => {
   // Handle wildcard query terms such as "Janssen*", "Pfizer*", "Moderna*"
   const rawClean = companyName.replace(/\*+$/g, '').trim();
@@ -445,7 +494,12 @@ export const fetchCompanyMetrics = async (companyName) => {
           if (seen.has(lower)) return;
           seen.add(lower);
 
-          const year = r.effective_time ? r.effective_time.substring(0, 4) : '2024';
+          // Resolve historical FDA approval year (override label SPL revision date if in historical database)
+          let year = r.effective_time ? r.effective_time.substring(0, 4) : '2024';
+          const knownKey = Object.keys(KNOWN_APPROVAL_YEARS).find(k => lower.includes(k));
+          if (knownKey) {
+            year = KNOWN_APPROVAL_YEARS[knownKey];
+          }
           
           // Infer therapeutic area
           const text = `${(r.openfda?.pharm_class_epc || []).join(' ')} ${(r.indications_and_usage?.[0] || '')}`.toLowerCase();
@@ -468,10 +522,18 @@ export const fetchCompanyMetrics = async (companyName) => {
         );
         if (matchedKey && MOCK_COMPANY_METRICS[matchedKey]?.approvedDrugs) {
           MOCK_COMPANY_METRICS[matchedKey].approvedDrugs.forEach((cd, idx) => {
-            if (!seen.has(cd.toLowerCase())) {
-              seen.add(cd.toLowerCase());
+            const lowerCd = cd.toLowerCase();
+            if (!seen.has(lowerCd)) {
+              seen.add(lowerCd);
               fdaDrugs.unshift(cd);
-              fdaDrugsList.unshift({ name: cd, year: String(2024 - idx), area: 'General Therapeutics' });
+              
+              let cdYear = String(2024 - idx);
+              const knownKey = Object.keys(KNOWN_APPROVAL_YEARS).find(k => lowerCd.includes(k));
+              if (knownKey) {
+                cdYear = KNOWN_APPROVAL_YEARS[knownKey];
+              }
+
+              fdaDrugsList.unshift({ name: cd, year: cdYear, area: 'General Therapeutics' });
             }
           });
         }

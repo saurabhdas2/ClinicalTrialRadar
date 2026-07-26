@@ -260,16 +260,18 @@ const TrialSearch = () => {
           {/* Header Result Controls */}
           <div style={{ 
             display: 'flex', 
-            justify: 'space-between', 
+            justifyContent: 'space-between', 
             alignItems: 'center', 
             backgroundColor: 'white', 
             padding: '14px 20px', 
             borderRadius: '10px', 
             border: '1px solid var(--border-color)', 
             marginBottom: '20px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+            boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+            flexWrap: 'wrap',
+            gap: '16px'
           }}>
-            <div>
+            <div style={{ flex: '1 1 auto', minWidth: '240px' }}>
               <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>
                 Showing {startItemIndex.toLocaleString()}–{endItemIndex.toLocaleString()} of {totalCount.toLocaleString()} matching clinical studies
               </div>
@@ -278,9 +280,9 @@ const TrialSearch = () => {
               </div>
             </div>
 
-            {/* Page Size Selector */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>Show per page:</span>
+            {/* Page Size Selector - Right Aligned & Non-overlapping */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: 'auto', flexShrink: 0 }}>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Show per page:</span>
               <select
                 value={pageSize}
                 onChange={(e) => handlePageSizeChange(e.target.value)}
@@ -293,7 +295,8 @@ const TrialSearch = () => {
                   color: 'var(--text-primary)',
                   backgroundColor: 'var(--bg-light)',
                   cursor: 'pointer',
-                  outline: 'none'
+                  outline: 'none',
+                  whiteSpace: 'nowrap'
                 }}
               >
                 <option value="10">10 trials</option>
@@ -349,7 +352,7 @@ const TrialSearch = () => {
             ))}
           </div>
 
-          {/* Enhanced Pagination Bar */}
+          {/* Bottom Pagination Bar - Right Aligned Controls */}
           <div style={{ 
             display: 'flex', 
             justify: 'space-between', 
@@ -359,18 +362,21 @@ const TrialSearch = () => {
             padding: '14px 20px',
             borderRadius: '10px',
             border: '1px solid var(--border-color)',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+            boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+            flexWrap: 'wrap',
+            gap: '16px'
           }}>
-            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '500' }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '500', whiteSpace: 'nowrap' }}>
               Showing {startItemIndex.toLocaleString()} to {endItemIndex.toLocaleString()} of {totalCount.toLocaleString()} studies
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Right Aligned Navigation Controls */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', flexShrink: 0 }}>
               <button 
                 className="btn btn-secondary" 
                 onClick={handleFirstPage} 
                 disabled={pageIndex === 0 || loading}
-                style={{ padding: '8px 12px', gap: '4px', fontSize: '13px' }}
+                style={{ padding: '8px 12px', gap: '4px', fontSize: '13px', whiteSpace: 'nowrap' }}
                 title="First Page"
               >
                 <ChevronsLeft size={16} /> First
@@ -380,7 +386,7 @@ const TrialSearch = () => {
                 className="btn btn-secondary" 
                 onClick={handlePrevPage} 
                 disabled={pageIndex === 0 || loading}
-                style={{ padding: '8px 14px', gap: '4px', fontSize: '13px' }}
+                style={{ padding: '8px 14px', gap: '4px', fontSize: '13px', whiteSpace: 'nowrap' }}
               >
                 <ChevronLeft size={16} /> Previous
               </button>
@@ -392,7 +398,8 @@ const TrialSearch = () => {
                 fontSize: '13px', 
                 fontWeight: '700', 
                 color: 'var(--primary)',
-                border: '1px solid var(--border-color)'
+                border: '1px solid var(--border-color)',
+                whiteSpace: 'nowrap'
               }}>
                 Page {pageIndex + 1} of {totalPages.toLocaleString()}
               </div>
@@ -401,7 +408,7 @@ const TrialSearch = () => {
                 className="btn btn-secondary" 
                 onClick={handleNextPage} 
                 disabled={!nextPageToken || loading}
-                style={{ padding: '8px 14px', gap: '4px', fontSize: '13px' }}
+                style={{ padding: '8px 14px', gap: '4px', fontSize: '13px', whiteSpace: 'nowrap' }}
               >
                 Next <ChevronRight size={16} />
               </button>

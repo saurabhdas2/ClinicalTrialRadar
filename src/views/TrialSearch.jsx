@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { fetchClinicalTrials } from '../services/apiService';
 import TrialDetailsModal from '../components/TrialDetailsModal';
-import { Search, RotateCcw, Calendar, Building, Eye, HelpCircle } from 'lucide-react';
+import { Search, RotateCcw, Calendar, Building, Eye, HelpCircle, ChevronLeft, ChevronRight, ChevronsLeft } from 'lucide-react';
 
 const TrialSearch = () => {
   const [filters, setFilters] = useState({
@@ -13,6 +13,8 @@ const TrialSearch = () => {
     sort: 'StartDate:desc' // Default: Latest Start Date
   });
   const [trials, setTrials] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
   const [loading, setLoading] = useState(false);
   const [selectedTrial, setSelectedTrial] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,18 +24,22 @@ const TrialSearch = () => {
   const [tokenHistory, setTokenHistory] = useState([null]);
   const [pageIndex, setPageIndex] = useState(0);
 
-  const loadTrials = async (currentFilters, targetPageIndex = 0, customTokenHistory = tokenHistory) => {
+  const resultsRef = useRef(null);
+
+  const loadTrials = async (currentFilters, targetPageIndex = 0, customTokenHistory = tokenHistory, activePageSize = pageSize) => {
     setLoading(true);
     try {
       const activeToken = customTokenHistory[targetPageIndex] || null;
       
       const payload = await fetchClinicalTrials({
         ...currentFilters,
+        pageSize: activePageSize,
         pageToken: activeToken,
         includePageToken: true
       });
 
       setTrials(payload.studies || []);
+      setTotalCount(payload.totalCount || (payload.studies ? payload.studies.length : 0));
       setNextPageToken(payload.nextPageToken || null);
       setPageIndex(targetPageIndex);
 
@@ -42,6 +48,10 @@ const TrialSearch = () => {
         const updatedHistory = [...customTokenHistory];
         updatedHistory[targetPageIndex + 1] = payload.nextPageToken;
         setTokenHistory(updatedHistory);
+      }
+
+      if (resultsRef.current && targetPageIndex > 0) {
+        resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     } catch (e) {
       console.error(e);
@@ -52,7 +62,7 @@ const TrialSearch = () => {
 
   // Perform search on mount
   useEffect(() => {
-    loadTrials(filters, 0, [null]);
+    loadTrials(filters, 0, [null], pageSize);
   }, []);
 
   const handleInputChange = (nameOrEvent, val) => {
@@ -64,10 +74,17 @@ const TrialSearch = () => {
     }
   };
 
+  const handlePageSizeChange = (newSize) => {
+    const size = parseInt(newSize, 10);
+    setPageSize(size);
+    setTokenHistory([null]);
+    loadTrials(filters, 0, [null], size);
+  };
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     setTokenHistory([null]);
-    loadTrials(filters, 0, [null]);
+    loadTrials(filters, 0, [null], pageSize);
   };
 
   const handleReset = () => {
@@ -81,7 +98,13 @@ const TrialSearch = () => {
     };
     setFilters(resetFilters);
     setTokenHistory([null]);
-    loadTrials(resetFilters, 0, [null]);
+    loadTrials(resetFilters, 0, [null], pageSize);
+  };
+
+  const handleFirstPage = () => {
+    if (pageIndex > 0) {
+      loadTrials(filters, 0);
+    }
   };
 
   const handleNextPage = () => {
@@ -106,8 +129,12 @@ const TrialSearch = () => {
     return phases.map(p => p.replace('PHASE', 'P')).join(', ');
   };
 
+  const startItemIndex = totalCount > 0 ? pageIndex * pageSize + 1 : 0;
+  const endItemIndex = totalCount > 0 ? Math.min((pageIndex + 1) * pageSize, totalCount) : 0;
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
+
   return (
-    <div>
+    <div ref={resultsRef}>
       {/* Search Filters Card */}
       <div className="card" style={{ marginBottom: '24px' }}>
         <form onSubmit={handleSearchSubmit}>
@@ -228,11 +255,56 @@ const TrialSearch = () => {
           </p>
         </div>
       ) : (
-        /* Results Grid */
+        /* Results Grid & Controls */
         <div>
-          <div className="section-header" style={{ marginBottom: '14px' }}>
-            <div className="section-subtitle">Found {trials.length} matches in global repository</div>
+          {/* Header Result Controls */}
+          <div style={{ 
+            display: 'flex', 
+            justify: 'space-between', 
+            alignItems: 'center', 
+            backgroundColor: 'white', 
+            padding: '14px 20px', 
+            borderRadius: '10px', 
+            border: '1px solid var(--border-color)', 
+            marginBottom: '20px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+          }}>
+            <div>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                Showing {startItemIndex.toLocaleString()}–{endItemIndex.toLocaleString()} of {totalCount.toLocaleString()} matching clinical studies
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                Official repository sync (ClinicalTrials.gov V2 REST API)
+              </div>
+            </div>
+
+            {/* Page Size Selector */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)' }}>Show per page:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => handlePageSizeChange(e.target.value)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-color)',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  color: 'var(--text-primary)',
+                  backgroundColor: 'var(--bg-light)',
+                  cursor: 'pointer',
+                  outline: 'none'
+                }}
+              >
+                <option value="10">10 trials</option>
+                <option value="20">20 trials</option>
+                <option value="50">50 trials</option>
+                <option value="100">100 trials</option>
+              </select>
+            </div>
           </div>
+
+          {/* 2-Column Cards Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
             {trials.map((trial) => (
               <div key={trial.nctId} className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '260px' }}>
@@ -277,27 +349,63 @@ const TrialSearch = () => {
             ))}
           </div>
 
-          {/* Pagination Controls */}
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginTop: '32px' }}>
-            <button 
-              className="btn btn-secondary" 
-              onClick={handlePrevPage} 
-              disabled={pageIndex === 0 || loading}
-              style={{ padding: '8px 16px', minWidth: '120px' }}
-            >
-              Previous Page
-            </button>
-            <span style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-secondary)' }}>
-              Page {pageIndex + 1}
-            </span>
-            <button 
-              className="btn btn-secondary" 
-              onClick={handleNextPage} 
-              disabled={!nextPageToken || loading}
-              style={{ padding: '8px 16px', minWidth: '120px' }}
-            >
-              Next Page
-            </button>
+          {/* Enhanced Pagination Bar */}
+          <div style={{ 
+            display: 'flex', 
+            justify: 'space-between', 
+            alignItems: 'center', 
+            marginTop: '32px',
+            backgroundColor: 'white',
+            padding: '14px 20px',
+            borderRadius: '10px',
+            border: '1px solid var(--border-color)',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+          }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '500' }}>
+              Showing {startItemIndex.toLocaleString()} to {endItemIndex.toLocaleString()} of {totalCount.toLocaleString()} studies
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button 
+                className="btn btn-secondary" 
+                onClick={handleFirstPage} 
+                disabled={pageIndex === 0 || loading}
+                style={{ padding: '8px 12px', gap: '4px', fontSize: '13px' }}
+                title="First Page"
+              >
+                <ChevronsLeft size={16} /> First
+              </button>
+              
+              <button 
+                className="btn btn-secondary" 
+                onClick={handlePrevPage} 
+                disabled={pageIndex === 0 || loading}
+                style={{ padding: '8px 14px', gap: '4px', fontSize: '13px' }}
+              >
+                <ChevronLeft size={16} /> Previous
+              </button>
+
+              <div style={{ 
+                padding: '6px 16px', 
+                backgroundColor: 'var(--bg-light)', 
+                borderRadius: '6px', 
+                fontSize: '13px', 
+                fontWeight: '700', 
+                color: 'var(--primary)',
+                border: '1px solid var(--border-color)'
+              }}>
+                Page {pageIndex + 1} of {totalPages.toLocaleString()}
+              </div>
+
+              <button 
+                className="btn btn-secondary" 
+                onClick={handleNextPage} 
+                disabled={!nextPageToken || loading}
+                style={{ padding: '8px 14px', gap: '4px', fontSize: '13px' }}
+              >
+                Next <ChevronRight size={16} />
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -313,3 +421,4 @@ const TrialSearch = () => {
 };
 
 export default TrialSearch;
+

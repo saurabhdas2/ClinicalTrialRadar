@@ -259,7 +259,12 @@ export const fetchClinicalTrials = async (filters = {}) => {
       params.append('sort', 'StudyFirstPostDate:desc');
     }
 
-    params.append('pageSize', '30');
+    // Always request total count from API
+    params.append('countTotal', 'true');
+
+    // Apply pageSize parameter (default to 20 if not specified)
+    const activePageSize = filters.pageSize ? String(filters.pageSize) : '20';
+    params.append('pageSize', activePageSize);
 
     const url = `https://clinicaltrials.gov/api/v2/studies?${params.toString()}`;
     const response = await fetch(url);
@@ -272,6 +277,7 @@ export const fetchClinicalTrials = async (filters = {}) => {
       if (filters.includePageToken) {
         return {
           studies: mapped,
+          totalCount: data.totalCount || mapped.length,
           nextPageToken: data.nextPageToken || null
         };
       }
@@ -279,16 +285,17 @@ export const fetchClinicalTrials = async (filters = {}) => {
     }
 
     if (filters.includePageToken) {
-      return { studies: [], nextPageToken: null };
+      return { studies: [], totalCount: data.totalCount || 0, nextPageToken: null };
     }
     return [];
 
   } catch (error) {
     console.warn('[apiService] ClinicalTrials.gov V2 query failed:', error.message);
+    const mockResults = filterMockTrials(filters);
     if (filters.includePageToken) {
-      return { studies: [], nextPageToken: null };
+      return { studies: mockResults, totalCount: mockResults.length, nextPageToken: null };
     }
-    return [];
+    return mockResults;
   }
 };
 

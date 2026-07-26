@@ -409,11 +409,14 @@ export const fetchOpenFDADrug = async (query) => {
  * @returns {Promise<object>} Company metrics object
  */
 export const fetchCompanyMetrics = async (companyName) => {
-  const normalizedSponsor = companyName.toLowerCase().trim();
+  // Handle wildcard query terms such as "Janssen*", "Pfizer*", "Moderna*"
+  const rawClean = companyName.replace(/\*+$/g, '').trim();
+  const searchSponsorParam = rawClean || companyName;
+  const normalizedSponsor = searchSponsorParam.toLowerCase();
 
   try {
-    // 1. Fetch studies sponsored by the company
-    const ctUrl = `https://clinicaltrials.gov/api/v2/studies?query.spons=${encodeURIComponent(companyName)}&pageSize=50`;
+    // 1. Fetch studies sponsored by the company from ClinicalTrials.gov V2
+    const ctUrl = `https://clinicaltrials.gov/api/v2/studies?query.spons=${encodeURIComponent(searchSponsorParam)}&pageSize=50`;
     const ctResponse = await fetch(ctUrl);
     if (!ctResponse.ok) throw new Error('ClinicalTrials sponsor query failed');
     const ctData = await ctResponse.json();
@@ -422,7 +425,7 @@ export const fetchCompanyMetrics = async (companyName) => {
     let fdaDrugs = [];
     let fdaDrugsList = [];
     try {
-      const fdaUrl = `https://api.fda.gov/drug/label.json?search=openfda.manufacturer_name:"${encodeURIComponent(companyName)}"&limit=100`;
+      const fdaUrl = `https://api.fda.gov/drug/label.json?search=openfda.manufacturer_name:"${encodeURIComponent(searchSponsorParam)}"&limit=100`;
       const fdaResponse = await fetch(fdaUrl);
       if (fdaResponse.ok) {
         const fdaData = await fdaResponse.json();
@@ -472,6 +475,9 @@ export const fetchCompanyMetrics = async (companyName) => {
             }
           });
         }
+
+        // Sort FDA drug approvals by year descending
+        fdaDrugsList.sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0));
       }
     } catch (e) {
       console.warn('[apiService] OpenFDA manufacturer search failed:', e.message);
@@ -483,7 +489,22 @@ export const fetchCompanyMetrics = async (companyName) => {
       throw new Error('No studies found for this sponsor in live API');
     }
 
-    // 3. Process status distribution
+    // 3. Process company-wise / entity-wise trial breakdown
+    const entityCounts = {};
+    studies.forEach(s => {
+      const sp = s.sponsor || searchSponsorParam;
+      entityCounts[sp] = (entityCounts[sp] || 0) + 1;
+    });
+
+    const matchedEntities = Object.entries(entityCounts)
+      .map(([name, count]) => ({
+        name,
+        count,
+        percentage: Math.round((count / studies.length) * 100)
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    // 4. Process status distribution
     const statusCounts = {};
     studies.forEach(s => {
       let statusKey = 'Active, Not Recruiting';
@@ -495,7 +516,7 @@ export const fetchCompanyMetrics = async (companyName) => {
     });
     const status = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
 
-    // 4. Process phase breakdown
+    // 5. Process phase breakdown
     const phaseCounts = { 'Phase 1': 0, 'Phase 2': 0, 'Phase 3': 0, 'Phase 4': 0 };
     studies.forEach(s => {
       (s.phases || []).forEach(p => {
@@ -507,7 +528,7 @@ export const fetchCompanyMetrics = async (companyName) => {
     });
     const phases = Object.entries(phaseCounts).map(([phase, count]) => ({ phase, count }));
 
-    // 5. Process therapeutic focus areas
+    // 6. Process therapeutic focus areas
     const areaCounts = {};
     studies.forEach(s => {
       if (s.therapeuticArea) {
@@ -519,7 +540,7 @@ export const fetchCompanyMetrics = async (companyName) => {
       .map(([name, count]) => ({ name, count, percentage: totalCounted ? Math.round((count / totalCounted) * 100) : 0 }))
       .sort((a, b) => b.count - a.count);
 
-    // 6. Process years timeline (2018–2026)
+    // 7. Process years timeline (2018–2026)
     const yearsMap = {};
     for (let y = 2018; y <= 2026; y++) {
       yearsMap[y] = { active: 0, completed: 0 };
@@ -542,15 +563,17 @@ export const fetchCompanyMetrics = async (companyName) => {
     }));
 
     return {
-      name: companyName.charAt(0).toUpperCase() + companyName.slice(1),
+      name: companyName,
+      cleanName: searchSponsorParam,
       years,
       status,
       phases,
       therapeuticAreas,
-      approvedDrugs: fdaDrugs.length > 0 ? fdaDrugs : [`${companyName} Compound-A`, `${companyName} Compound-B`],
+      matchedEntities,
+      approvedDrugs: fdaDrugs.length > 0 ? fdaDrugs : [`${searchSponsorParam} Compound-A`, `${searchSponsorParam} Compound-B`],
       approvedDrugsList: fdaDrugsList.length > 0 ? fdaDrugsList : [
-        { name: `${companyName} Compound-A`, year: '2024', area: 'Oncology' },
-        { name: `${companyName} Compound-B`, year: '2023', area: 'Cardiology' }
+        { name: `${searchSponsorParam} Compound-A`, year: '2024', area: 'Oncology' },
+        { name: `${searchSponsorParam} Compound-B`, year: '2023', area: 'Cardiology' }
       ]
     };
 
@@ -567,19 +590,37 @@ export const fetchCompanyMetrics = async (companyName) => {
         name: typeof d === 'string' ? d : d.name,
         year: String(2024 - idx),
         area: 'General Therapeutics'
-      }));
-      return { name: matchedKey, ...mockData, approvedDrugsList: list };
+      })).sort((a, b) => Number(b.year) - Number(a.year));
+
+      const synthEntities = [
+        { name: `${matchedKey} Research & Development, LLC`, count: 24, percentage: 60 },
+        { name: `${matchedKey} Global Pharmaceuticals`, count: 12, percentage: 30 },
+        { name: `${matchedKey} Bioscience Inc.`, count: 4, percentage: 10 }
+      ];
+
+      return { 
+        name: companyName, 
+        cleanName: matchedKey,
+        ...mockData, 
+        matchedEntities: mockData.matchedEntities || synthEntities,
+        approvedDrugsList: list 
+      };
     }
 
     // Deterministic synthetic data generation via string hash fallback
     const hash = normalizedSponsor.split('').reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7) & 0x7fffffff;
     const h = (mod, offset = 0) => (hash % mod) + offset;
 
-    const synthDrugs = [`${companyName} Drug-A`, `${companyName} Drug-B`];
+    const synthDrugs = [`${searchSponsorParam} Drug-A`, `${searchSponsorParam} Drug-B`];
     const synthList = synthDrugs.map((d, idx) => ({ name: d, year: String(2024 - idx), area: 'General Therapeutics' }));
+    const synthEntities = [
+      { name: `${searchSponsorParam} Research & Development`, count: h(20, 10), percentage: 65 },
+      { name: `${searchSponsorParam} Global Inc.`, count: h(10, 5), percentage: 35 }
+    ];
 
     return {
-      name: companyName.charAt(0).toUpperCase() + companyName.slice(1),
+      name: companyName,
+      cleanName: searchSponsorParam,
       years: Array.from({ length: 9 }, (_, i) => ({
         year:      String(2018 + i),
         active:    h(20, 10) + i * 2,
@@ -603,6 +644,7 @@ export const fetchCompanyMetrics = async (companyName) => {
         { name: 'Neurology',           count: h(14, 2) },
         { name: 'Infectious Diseases', count: h(8,  1) }
       ],
+      matchedEntities: synthEntities,
       approvedDrugs: synthDrugs,
       approvedDrugsList: synthList
     };

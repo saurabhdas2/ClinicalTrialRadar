@@ -632,11 +632,8 @@ export const fetchCompanyMetrics = async (companyName) => {
       phases,
       therapeuticAreas,
       matchedEntities,
-      approvedDrugs: fdaDrugs.length > 0 ? fdaDrugs : [`${searchSponsorParam} Compound-A`, `${searchSponsorParam} Compound-B`],
-      approvedDrugsList: fdaDrugsList.length > 0 ? fdaDrugsList : [
-        { name: `${searchSponsorParam} Compound-A`, year: '2024', area: 'Oncology' },
-        { name: `${searchSponsorParam} Compound-B`, year: '2023', area: 'Cardiology' }
-      ]
+      approvedDrugs: fdaDrugs,
+      approvedDrugsList: fdaDrugsList
     };
 
   } catch (error) {
@@ -673,8 +670,6 @@ export const fetchCompanyMetrics = async (companyName) => {
     const hash = normalizedSponsor.split('').reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7) & 0x7fffffff;
     const h = (mod, offset = 0) => (hash % mod) + offset;
 
-    const synthDrugs = [`${searchSponsorParam} Drug-A`, `${searchSponsorParam} Drug-B`];
-    const synthList = synthDrugs.map((d, idx) => ({ name: d, year: String(2024 - idx), area: 'General Therapeutics' }));
     const synthEntities = [
       { name: `${searchSponsorParam} Research & Development`, count: h(20, 10), percentage: 65 },
       { name: `${searchSponsorParam} Global Inc.`, count: h(10, 5), percentage: 35 }
@@ -707,8 +702,8 @@ export const fetchCompanyMetrics = async (companyName) => {
         { name: 'Infectious Diseases', count: h(8,  1) }
       ],
       matchedEntities: synthEntities,
-      approvedDrugs: synthDrugs,
-      approvedDrugsList: synthList
+      approvedDrugs: [],
+      approvedDrugsList: []
     };
   }
 };

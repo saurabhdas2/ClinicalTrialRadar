@@ -363,63 +363,73 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
               </div>
             </div>
 
-            <div className="table-container" style={{ border: 'none', maxHeight: '350px', overflowY: 'auto', marginTop: '10px' }}>
-              <table className="custom-table" style={{ fontSize: '13px' }}>
-                <thead style={{ position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 5, boxShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
-                  <tr>
-                    <th>Drug Name</th>
-                    <th>Year Approved / Effective</th>
-                    <th>Therapeutic Area</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...(companyData.approvedDrugsList || companyData.approvedDrugs.map((d, i) => (
-                    typeof d === 'object' ? d : { name: d, year: String(2024 - i), area: 'General Therapeutics' }
-                  )))].sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0))
-                  .map((item, idx) => {
-                    const drugName = typeof item === 'object' ? item.name : item;
-                    const year = typeof item === 'object' ? item.year : '2024';
-                    const area = typeof item === 'object' ? item.area : 'General Therapeutics';
+            {(companyData.approvedDrugsList?.length > 0 || companyData.approvedDrugs?.length > 0) ? (
+              <div className="table-container" style={{ border: 'none', maxHeight: '350px', overflowY: 'auto', marginTop: '10px' }}>
+                <table className="custom-table" style={{ fontSize: '13px' }}>
+                  <thead style={{ position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 5, boxShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
+                    <tr>
+                      <th>Drug Name</th>
+                      <th>Year Approved / Effective</th>
+                      <th>Therapeutic Area</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...(companyData.approvedDrugsList || companyData.approvedDrugs.map((d, i) => (
+                      typeof d === 'object' ? d : { name: d, year: String(2024 - i), area: 'General Therapeutics' }
+                    )))].sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0))
+                    .map((item, idx) => {
+                      const drugName = typeof item === 'object' ? item.name : item;
+                      const year = typeof item === 'object' ? item.year : '2024';
+                      const area = typeof item === 'object' ? item.area : 'General Therapeutics';
 
-                    return (
-                      <tr key={idx}>
-                        <td style={{ fontWeight: '700', color: 'var(--primary)' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ height: '8px', width: '8px', backgroundColor: 'var(--accent)', borderRadius: '50%', flexShrink: 0 }} />
-                            <button 
-                              type="button"
-                              onClick={() => onNavigateToDrug && onNavigateToDrug(drugName)}
-                              style={{
-                                background: 'none',
-                                border: 'none',
-                                padding: 0,
-                                color: 'var(--primary)',
-                                fontWeight: '700',
-                                textDecoration: 'underline',
-                                cursor: 'pointer',
-                                fontSize: '13px',
-                                textAlign: 'left'
-                              }}
-                              title={`Search ${drugName} in OpenFDA Drug Search`}
-                            >
-                              {drugName}
-                            </button>
-                          </div>
-                        </td>
-                        <td style={{ fontWeight: '600', color: 'var(--text-secondary)' }}>
-                          {year}
-                        </td>
-                        <td>
-                          <span className="phase-badge" style={{ backgroundColor: 'var(--accent-light)', color: 'var(--primary)', border: 'none', fontSize: '11px' }}>
-                            {area}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                      return (
+                        <tr key={idx}>
+                          <td style={{ fontWeight: '700', color: 'var(--primary)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ height: '8px', width: '8px', backgroundColor: 'var(--accent)', borderRadius: '50%', flexShrink: 0 }} />
+                              <button 
+                                type="button"
+                                onClick={() => onNavigateToDrug && onNavigateToDrug(drugName)}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  padding: 0,
+                                  color: 'var(--primary)',
+                                  fontWeight: '700',
+                                  textDecoration: 'underline',
+                                  cursor: 'pointer',
+                                  fontSize: '13px',
+                                  textAlign: 'left'
+                                }}
+                                title={`Search ${drugName} in OpenFDA Drug Search`}
+                              >
+                                {drugName}
+                              </button>
+                            </div>
+                          </td>
+                          <td style={{ fontWeight: '600', color: 'var(--text-secondary)' }}>
+                            {year}
+                          </td>
+                          <td>
+                            <span className="phase-badge" style={{ backgroundColor: 'var(--accent-light)', color: 'var(--primary)', border: 'none', fontSize: '11px' }}>
+                              {area}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div style={{ padding: '30px 20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                <Award size={32} style={{ margin: '0 auto 10px', color: 'var(--text-light)' }} />
+                <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>No OpenFDA Documented Commercial Drug Approvals</div>
+                <p style={{ fontSize: '12px', color: 'var(--text-light)', marginTop: '4px', maxWidth: '520px', margin: '6px auto 0' }}>
+                  {companyData.name} sponsors clinical research trials, but does not hold commercial drug label registrations under this manufacturer name in the OpenFDA registry.
+                </p>
+              </div>
+            )}
             <p style={{ fontSize: '12px', color: 'var(--text-light)', marginTop: '16px', lineHeight: '1.4' }}>
               *Approval lists are aggregated from OpenFDA drug label registry entries associated with matching manufacturer attributes, sorted by effective year descending.
             </p>

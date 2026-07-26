@@ -707,6 +707,14 @@ export const fetchCompanyMetrics = async (companyName) => {
 export const fetchGlobalStats = async () => {
   try {
     const currentYear = new Date().getFullYear();
+    const sponsors = ['Pfizer', 'GlaxoSmithKline', 'Novartis', 'Merck', 'AstraZeneca', 'Sanofi', 'Roche', 'Eli Lilly', 'Bristol Myers Squibb', 'Janssen'];
+    const sponsorColors = ['#0071bc', '#14b8a6', '#0ea5e9', '#f59e0b', '#ef4444', '#6366f1', '#10b981', '#f97316', '#ec4899', '#8b5cf6'];
+
+    const sponsorPromises = sponsors.map(s => 
+      fetch(`https://clinicaltrials.gov/api/v2/studies?query.spons=${encodeURIComponent(s)}&filter.overallStatus=COMPLETED&countTotal=true&pageSize=0`)
+        .then(r => r.ok ? r.json() : null)
+    );
+
     const [
       sizeRes,
       recruitingRes,
@@ -719,7 +727,8 @@ export const fetchGlobalStats = async () => {
       respiratoryRes,
       endocrinologyRes,
       infectiousRes,
-      immunologyRes
+      immunologyRes,
+      ...sponsorResults
     ] = await Promise.all([
       fetch('https://clinicaltrials.gov/api/v2/stats/size').then(r => r.ok ? r.json() : null),
       fetch('https://clinicaltrials.gov/api/v2/studies?filter.overallStatus=RECRUITING&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
@@ -732,7 +741,8 @@ export const fetchGlobalStats = async () => {
       fetch('https://clinicaltrials.gov/api/v2/studies?query.cond=Respiratory&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
       fetch('https://clinicaltrials.gov/api/v2/studies?query.cond=Endocrinology&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
       fetch('https://clinicaltrials.gov/api/v2/studies?query.cond=Infectious+Diseases&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
-      fetch('https://clinicaltrials.gov/api/v2/studies?query.cond=Immunology&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null)
+      fetch('https://clinicaltrials.gov/api/v2/studies?query.cond=Immunology&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
+      ...sponsorPromises
     ]);
 
     const total = sizeRes?.totalStudies || 595630;
@@ -743,12 +753,19 @@ export const fetchGlobalStats = async () => {
     const terminated = terminatedRes?.totalCount || 52347;
     const activeTotal = recruiting + activeNotRecruiting;
 
+    const completedByCompany = sponsors.map((s, i) => ({
+      name: s,
+      count: sponsorResults[i]?.totalCount || 0,
+      color: sponsorColors[i]
+    })).sort((a, b) => b.count - a.count);
+
     return {
       totalTrials: total,
       activeTrials: activeTotal,
       recruitingTrials: recruiting,
       completedAllTime: completedAllTime,
       completedThisYear: completedThisYear,
+      completedByCompany: completedByCompany,
       therapeuticAreas: [
         { name: 'Oncology', count: oncologyRes?.totalCount || 122108, color: '#0071bc' },
         { name: 'Cardiology', count: cardiologyRes?.totalCount || 67190, color: '#0ea5e9' },
@@ -772,6 +789,18 @@ export const fetchGlobalStats = async () => {
       recruitingTrials: 65408,
       completedAllTime: 325239,
       completedThisYear: 6455,
+      completedByCompany: [
+        { name: 'Pfizer', count: 4465, color: '#0071bc' },
+        { name: 'GlaxoSmithKline', count: 4010, color: '#14b8a6' },
+        { name: 'Novartis', count: 3508, color: '#0ea5e9' },
+        { name: 'Merck', count: 3346, color: '#f59e0b' },
+        { name: 'AstraZeneca', count: 3308, color: '#ef4444' },
+        { name: 'Sanofi', count: 2547, color: '#6366f1' },
+        { name: 'Roche', count: 2232, color: '#10b981' },
+        { name: 'Eli Lilly', count: 2209, color: '#f97316' },
+        { name: 'Bristol Myers Squibb', count: 1912, color: '#ec4899' },
+        { name: 'Janssen', count: 1772, color: '#8b5cf6' }
+      ],
       therapeuticAreas: [
         { name: 'Oncology', count: 122108, color: '#0071bc' },
         { name: 'Cardiology', count: 67190, color: '#0ea5e9' },

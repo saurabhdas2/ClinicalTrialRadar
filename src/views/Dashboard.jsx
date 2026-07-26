@@ -208,6 +208,45 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* Chart 3: Completed Trials Breakup Across Major Pharmaceutical Companies */}
+      <div className="card" style={{ height: '440px', marginTop: '24px', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>
+        <div className="section-header">
+          <div className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Award size={20} color="var(--primary)" />
+            <span>Completed Trials Breakup Across Major Pharmaceutical Companies</span>
+          </div>
+          <div className="section-subtitle">
+            Total completed clinical studies registered by leading global pharmaceutical sponsors (ClinicalTrials.gov V2)
+          </div>
+        </div>
+        <div style={{ flex: 1, minHeight: 0, marginTop: '10px' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={globalStats.completedByCompany || []}
+              layout="vertical"
+              margin={{ top: 10, right: 40, left: 20, bottom: 10 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+              <XAxis type="number" tickFormatter={(v) => v.toLocaleString()} />
+              <YAxis 
+                dataKey="name" 
+                type="category" 
+                axisLine={false} 
+                tickLine={false} 
+                width={150}
+                tick={{ fontSize: 13, fontWeight: '600', fill: 'var(--text-secondary)' }}
+              />
+              <Tooltip formatter={(value) => [`${value.toLocaleString()} Completed Studies`, 'Total Completed']} />
+              <Bar dataKey="count" radius={[0, 6, 6, 0]}>
+                {(globalStats.completedByCompany || []).map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
       {/* Recent Activity / Studies Feed */}
       <div className="card">
         <div className="section-header">

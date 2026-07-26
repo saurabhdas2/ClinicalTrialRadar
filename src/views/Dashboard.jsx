@@ -171,11 +171,18 @@ const Dashboard = () => {
               <BarChart
                 data={globalStats.therapeuticAreas}
                 layout="vertical"
-                margin={{ top: 10, right: 30, left: 40, bottom: 5 }}
+                margin={{ top: 10, right: 30, left: 10, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
                 <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  width={150}
+                  tick={{ fontSize: 13, fill: 'var(--text-secondary)' }}
+                />
                 <Tooltip formatter={(value) => [`${value} Trials`, 'Count']} />
                 <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                   {globalStats.therapeuticAreas.map((entry, index) => (

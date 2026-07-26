@@ -708,19 +708,32 @@ export const fetchGlobalStats = async () => {
   try {
     const currentYear = new Date().getFullYear();
     const sponsors = ['AstraZeneca', 'Merck', 'Novartis', 'Bristol Myers Squibb', 'Pfizer', 'Roche', 'Janssen', 'Eli Lilly', 'Sanofi', 'GlaxoSmithKline'];
-    const countries = [
-      { country: 'United States', code: 'USA', flag: '🇺🇸', x: 20, y: 35 },
-      { country: 'China', code: 'CHN', flag: '🇨🇳', x: 77, y: 36 },
-      { country: 'France', code: 'FRA', flag: '🇫🇷', x: 48.5, y: 28 },
-      { country: 'Italy', code: 'ITA', flag: '🇮🇹', x: 53.5, y: 30 },
-      { country: 'Canada', code: 'CAN', flag: '🇨🇦', x: 20, y: 22 },
-      { country: 'Spain', code: 'ESP', flag: '🇪🇸', x: 46.5, y: 32 },
-      { country: 'United Kingdom', code: 'GBR', flag: '🇬🇧', x: 45.5, y: 22 },
-      { country: 'Germany', code: 'DEU', flag: '🇩🇪', x: 51.5, y: 24 },
-      { country: 'Australia', code: 'AUS', flag: '🇦🇺', x: 83.5, y: 74 },
-      { country: 'Japan', code: 'JPN', flag: '🇯🇵', x: 87.5, y: 33 },
-      { country: 'Brazil', code: 'BRA', flag: '🇧🇷', x: 32, y: 68 },
-      { country: 'India', code: 'IND', flag: '🇮🇳', x: 70.5, y: 44 }
+    const candidateCountries = [
+      { country: 'United States', code: 'USA', flag: '🇺🇸', lat: 37.0902, lng: -95.7129 },
+      { country: 'China', code: 'CHN', flag: '🇨🇳', lat: 35.8617, lng: 104.1954 },
+      { country: 'France', code: 'FRA', flag: '🇫🇷', lat: 46.2276, lng: 2.2137 },
+      { country: 'Italy', code: 'ITA', flag: '🇮🇹', lat: 41.8719, lng: 12.5674 },
+      { country: 'Canada', code: 'CAN', flag: '🇨🇦', lat: 56.1304, lng: -106.3468 },
+      { country: 'Spain', code: 'ESP', flag: '🇪🇸', lat: 40.4637, lng: -3.7492 },
+      { country: 'United Kingdom', code: 'GBR', flag: '🇬🇧', lat: 55.3781, lng: -3.4360 },
+      { country: 'Germany', code: 'DEU', flag: '🇩🇪', lat: 51.1657, lng: 10.4515 },
+      { country: 'Australia', code: 'AUS', flag: '🇦🇺', lat: -25.2744, lng: 133.7751 },
+      { country: 'Japan', code: 'JPN', flag: '🇯🇵', lat: 36.2048, lng: 138.2529 },
+      { country: 'Brazil', code: 'BRA', flag: '🇧🇷', lat: -14.2350, lng: -51.9253 },
+      { country: 'India', code: 'IND', flag: '🇮🇳', lat: 20.5937, lng: 78.9629 },
+      { country: 'South Korea', code: 'KOR', flag: '🇰🇷', lat: 35.9078, lng: 127.7669 },
+      { country: 'Netherlands', code: 'NLD', flag: '🇳🇱', lat: 52.1326, lng: 5.2913 },
+      { country: 'Poland', code: 'POL', flag: '🇵🇱', lat: 51.9194, lng: 19.1451 },
+      { country: 'Belgium', code: 'BEL', flag: '🇧🇪', lat: 50.5039, lng: 4.4699 },
+      { country: 'Switzerland', code: 'CHE', flag: '🇨🇭', lat: 46.8182, lng: 8.2275 },
+      { country: 'Israel', code: 'ISR', flag: '🇮🇱', lat: 31.0461, lng: 34.8516 },
+      { country: 'Sweden', code: 'SWE', flag: '🇸🇪', lat: 60.1282, lng: 18.6435 },
+      { country: 'Denmark', code: 'DNK', flag: '🇩🇰', lat: 56.2639, lng: 9.5018 },
+      { country: 'Turkey', code: 'TUR', flag: '🇹🇷', lat: 38.9637, lng: 35.2433 },
+      { country: 'Mexico', code: 'MEX', flag: '🇲🇽', lat: 23.6345, lng: -102.5528 },
+      { country: 'Argentina', code: 'ARG', flag: '🇦🇷', lat: -38.4161, lng: -63.6167 },
+      { country: 'Taiwan', code: 'TWN', flag: '🇹🇼', lat: 23.6978, lng: 120.9605 },
+      { country: 'Austria', code: 'AUT', flag: '🇦🇹', lat: 47.5162, lng: 14.5501 }
     ];
 
     const sponsorPromises = sponsors.map(s => 
@@ -732,7 +745,7 @@ export const fetchGlobalStats = async () => {
       ])
     );
 
-    const countryPromises = countries.map(c => 
+    const countryPromises = candidateCountries.map(c => 
       fetch(`https://clinicaltrials.gov/api/v2/studies?query.locn=${encodeURIComponent(c.country)}&filter.overallStatus=RECRUITING,ACTIVE_NOT_RECRUITING&countTotal=true&pageSize=0`)
         .then(r => r.ok ? r.json() : null)
     );
@@ -783,10 +796,12 @@ export const fetchGlobalStats = async () => {
       completed2026: sponsorResults[i]?.[1]?.totalCount || 0
     })).sort((a, b) => (b.active + b.completed2026) - (a.active + a.completed2026));
 
-    const activeSites = countries.map((c, i) => ({
+    const activeSites = candidateCountries.map((c, i) => ({
       ...c,
-      activeCount: countryResults[i]?.totalCount || 0
-    })).sort((a, b) => b.activeCount - a.activeCount);
+      activeCount: countryResults[i]?.totalCount || 0,
+      x: +(((c.lng + 180) / 360) * 100).toFixed(2),
+      y: +(((90 - c.lat) / 180) * 100).toFixed(2)
+    })).sort((a, b) => b.activeCount - a.activeCount).slice(0, 20);
 
     return {
       totalTrials: total,

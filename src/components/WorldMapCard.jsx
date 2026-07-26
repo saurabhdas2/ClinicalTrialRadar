@@ -5,7 +5,7 @@ import { WORLD_MAP_PATH } from './worldMapPath';
 const WorldMapCard = ({ sites = [] }) => {
   const [hoveredSite, setHoveredSite] = useState(null);
 
-  // Fallback defaults if site array is loading with exact mathematical lat/lng projection coords
+  // Dynamic Top 20 countries by active trial site volume
   const defaultSites = [
     { country: 'United States', code: 'USA', flag: '🇺🇸', x: 23.41, y: 29.39, activeCount: 32652 },
     { country: 'China', code: 'CHN', flag: '🇨🇳', x: 78.94, y: 30.08, activeCount: 14352 },
@@ -15,10 +15,18 @@ const WorldMapCard = ({ sites = [] }) => {
     { country: 'Spain', code: 'ESP', flag: '🇪🇸', x: 48.96, y: 27.52, activeCount: 5107 },
     { country: 'United Kingdom', code: 'GBR', flag: '🇬🇧', x: 49.05, y: 19.23, activeCount: 4705 },
     { country: 'Germany', code: 'DEU', flag: '🇩🇪', x: 52.90, y: 21.57, activeCount: 4647 },
+    { country: 'Turkey', code: 'TUR', flag: '🇹🇷', x: 59.79, y: 28.35, activeCount: 3725 },
     { country: 'Australia', code: 'AUS', flag: '🇦🇺', x: 87.16, y: 64.04, activeCount: 3034 },
+    { country: 'South Korea', code: 'KOR', flag: '🇰🇷', x: 85.49, y: 30.05, activeCount: 2937 },
+    { country: 'Netherlands', code: 'NLD', flag: '🇳🇱', x: 51.47, y: 21.04, activeCount: 2922 },
+    { country: 'Belgium', code: 'BEL', flag: '🇧🇪', x: 51.24, y: 21.94, activeCount: 2863 },
+    { country: 'Taiwan', code: 'TWN', flag: '🇹🇼', x: 83.60, y: 36.83, activeCount: 2420 },
+    { country: 'Poland', code: 'POL', flag: '🇵🇱', x: 55.32, y: 21.16, activeCount: 2378 },
     { country: 'Japan', code: 'JPN', flag: '🇯🇵', x: 88.40, y: 29.89, activeCount: 2294 },
-    { country: 'Brazil', code: 'BRA', flag: '🇧🇷', x: 35.58, y: 57.91, activeCount: 1872 },
-    { country: 'India', code: 'IND', flag: '🇮🇳', x: 71.93, y: 38.56, activeCount: 948 }
+    { country: 'Israel', code: 'ISR', flag: '🇮🇱', x: 59.68, y: 32.75, activeCount: 2244 },
+    { country: 'Denmark', code: 'DNK', flag: '🇩🇰', x: 52.64, y: 18.74, activeCount: 2149 },
+    { country: 'Switzerland', code: 'CHE', flag: '🇨🇭', x: 52.29, y: 23.99, activeCount: 1997 },
+    { country: 'Sweden', code: 'SWE', flag: '🇸🇪', x: 55.18, y: 16.60, activeCount: 1918 }
   ];
 
   const siteList = (sites && sites.length > 0) ? sites : defaultSites;
@@ -194,7 +202,7 @@ const WorldMapCard = ({ sites = [] }) => {
         }}>
           <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
             <Navigation size={16} color="var(--primary)" />
-            <span>Top Active Trial Site Hubs</span>
+            <span>Top 20 Active Trial Site Hubs</span>
           </div>
 
           <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>

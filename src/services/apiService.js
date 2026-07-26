@@ -708,6 +708,20 @@ export const fetchGlobalStats = async () => {
   try {
     const currentYear = new Date().getFullYear();
     const sponsors = ['AstraZeneca', 'Merck', 'Novartis', 'Bristol Myers Squibb', 'Pfizer', 'Roche', 'Janssen', 'Eli Lilly', 'Sanofi', 'GlaxoSmithKline'];
+    const countries = [
+      { country: 'United States', code: 'USA', flag: '🇺🇸', x: 22, y: 38 },
+      { country: 'China', code: 'CHN', flag: '🇨🇳', x: 78, y: 42 },
+      { country: 'France', code: 'FRA', flag: '🇫🇷', x: 48, y: 32 },
+      { country: 'Italy', code: 'ITA', flag: '🇮🇹', x: 53, y: 36 },
+      { country: 'Canada', code: 'CAN', flag: '🇨🇦', x: 24, y: 24 },
+      { country: 'Spain', code: 'ESP', flag: '🇪🇸', x: 45, y: 38 },
+      { country: 'United Kingdom', code: 'GBR', flag: '🇬🇧', x: 46, y: 28 },
+      { country: 'Germany', code: 'DEU', flag: '🇩🇪', x: 52, y: 30 },
+      { country: 'Australia', code: 'AUS', flag: '🇦🇺', x: 84, y: 76 },
+      { country: 'Japan', code: 'JPN', flag: '🇯🇵', x: 86, y: 40 },
+      { country: 'Brazil', code: 'BRA', flag: '🇧🇷', x: 34, y: 68 },
+      { country: 'India', code: 'IND', flag: '🇮🇳', x: 70, y: 48 }
+    ];
 
     const sponsorPromises = sponsors.map(s => 
       Promise.all([
@@ -716,6 +730,11 @@ export const fetchGlobalStats = async () => {
         fetch(`https://clinicaltrials.gov/api/v2/studies?query.spons=${encodeURIComponent(s)}&query.term=AREA%5BCompletionDate%5D${currentYear}&filter.overallStatus=COMPLETED&countTotal=true&pageSize=0`)
           .then(r => r.ok ? r.json() : null)
       ])
+    );
+
+    const countryPromises = countries.map(c => 
+      fetch(`https://clinicaltrials.gov/api/v2/studies?query.locn=${encodeURIComponent(c.country)}&filter.overallStatus=RECRUITING,ACTIVE_NOT_RECRUITING&countTotal=true&pageSize=0`)
+        .then(r => r.ok ? r.json() : null)
     );
 
     const [
@@ -731,7 +750,8 @@ export const fetchGlobalStats = async () => {
       endocrinologyRes,
       infectiousRes,
       immunologyRes,
-      ...sponsorResults
+      sponsorResults,
+      countryResults
     ] = await Promise.all([
       fetch('https://clinicaltrials.gov/api/v2/stats/size').then(r => r.ok ? r.json() : null),
       fetch('https://clinicaltrials.gov/api/v2/studies?filter.overallStatus=RECRUITING&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
@@ -745,7 +765,8 @@ export const fetchGlobalStats = async () => {
       fetch('https://clinicaltrials.gov/api/v2/studies?query.cond=Endocrinology&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
       fetch('https://clinicaltrials.gov/api/v2/studies?query.cond=Infectious+Diseases&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
       fetch('https://clinicaltrials.gov/api/v2/studies?query.cond=Immunology&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
-      ...sponsorPromises
+      Promise.all(sponsorPromises),
+      Promise.all(countryPromises)
     ]);
 
     const total = sizeRes?.totalStudies || 595630;
@@ -762,6 +783,11 @@ export const fetchGlobalStats = async () => {
       completed2026: sponsorResults[i]?.[1]?.totalCount || 0
     })).sort((a, b) => (b.active + b.completed2026) - (a.active + a.completed2026));
 
+    const activeSites = countries.map((c, i) => ({
+      ...c,
+      activeCount: countryResults[i]?.totalCount || 0
+    })).sort((a, b) => b.activeCount - a.activeCount);
+
     return {
       totalTrials: total,
       activeTrials: activeTotal,
@@ -769,6 +795,7 @@ export const fetchGlobalStats = async () => {
       completedAllTime: completedAllTime,
       completedThisYear: completedThisYear,
       completedByCompany: completedByCompany,
+      activeSites: activeSites,
       therapeuticAreas: [
         { name: 'Oncology', count: oncologyRes?.totalCount || 122108, color: '#0071bc' },
         { name: 'Cardiology', count: cardiologyRes?.totalCount || 67190, color: '#0ea5e9' },
@@ -803,6 +830,20 @@ export const fetchGlobalStats = async () => {
         { name: 'Janssen', active: 353, completed2026: 20 },
         { name: 'Sanofi', active: 273, completed2026: 35 },
         { name: 'GlaxoSmithKline', active: 235, completed2026: 14 }
+      ],
+      activeSites: [
+        { country: 'United States', code: 'USA', flag: '🇺🇸', x: 22, y: 38, activeCount: 32652 },
+        { country: 'China', code: 'CHN', flag: '🇨🇳', x: 78, y: 42, activeCount: 14352 },
+        { country: 'France', code: 'FRA', flag: '🇫🇷', x: 48, y: 32, activeCount: 8257 },
+        { country: 'Italy', code: 'ITA', flag: '🇮🇹', x: 53, y: 36, activeCount: 6038 },
+        { country: 'Canada', code: 'CAN', flag: '🇨🇦', x: 24, y: 24, activeCount: 5756 },
+        { country: 'Spain', code: 'ESP', flag: '🇪🇸', x: 45, y: 38, activeCount: 5107 },
+        { country: 'United Kingdom', code: 'GBR', flag: '🇬🇧', x: 46, y: 28, activeCount: 4705 },
+        { country: 'Germany', code: 'DEU', flag: '🇩🇪', x: 52, y: 30, activeCount: 4647 },
+        { country: 'Australia', code: 'AUS', flag: '🇦🇺', x: 84, y: 76, activeCount: 3034 },
+        { country: 'Japan', code: 'JPN', flag: '🇯🇵', x: 86, y: 40, activeCount: 2294 },
+        { country: 'Brazil', code: 'BRA', flag: '🇧🇷', x: 34, y: 68, activeCount: 1872 },
+        { country: 'India', code: 'IND', flag: '🇮🇳', x: 70, y: 48, activeCount: 948 }
       ],
       therapeuticAreas: [
         { name: 'Oncology', count: 122108, color: '#0071bc' },

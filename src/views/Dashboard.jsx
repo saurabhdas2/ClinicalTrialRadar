@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetchClinicalTrials, fetchGlobalStats } from '../services/apiService';
 import TrialDetailsModal from '../components/TrialDetailsModal';
+import WorldMapCard from '../components/WorldMapCard';
 import { Activity, ShieldAlert, Award, FileSpreadsheet, Eye, RefreshCw } from 'lucide-react';
 import { 
 	PieChart, Pie, Cell, ResponsiveContainer, 
@@ -207,6 +208,9 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* World Map of Active Trial Sites */}
+      <WorldMapCard sites={globalStats.activeSites} />
 
       {/* Chart 3: Company Trial Portfolio: Active Trials vs Completed in 2026 */}
       <div className="card" style={{ height: '480px', marginTop: '24px', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>

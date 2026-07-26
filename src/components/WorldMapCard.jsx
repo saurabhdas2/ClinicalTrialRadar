@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Globe, MapPin, Activity, Navigation, Search } from 'lucide-react';
 import { WORLD_MAP_PATH } from './worldMapPath';
 
-const WorldMapCard = ({ sites = [], totalActiveTrials }) => {
+const WorldMapCard = ({ sites = [], totalActiveTrials, onSiteClick }) => {
   const [hoveredSite, setHoveredSite] = useState(null);
   const [showTopLimit, setShowTopLimit] = useState(25);
   const [searchTerm, setSearchTerm] = useState('');
@@ -114,6 +114,7 @@ const WorldMapCard = ({ sites = [], totalActiveTrials }) => {
                 key={site.code}
                 onMouseEnter={() => setHoveredSite(site)}
                 onMouseLeave={() => setHoveredSite(null)}
+                onClick={() => onSiteClick && onSiteClick(site)}
                 style={{
                   position: 'absolute',
                   left: `${site.x}%`,
@@ -286,6 +287,7 @@ const WorldMapCard = ({ sites = [], totalActiveTrials }) => {
                   key={site.code}
                   onMouseEnter={() => setHoveredSite(site)}
                   onMouseLeave={() => setHoveredSite(null)}
+                  onClick={() => onSiteClick && onSiteClick(site)}
                   style={{
                     padding: '8px 10px',
                     borderRadius: '6px',

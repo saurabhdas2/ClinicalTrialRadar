@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { fetchClinicalTrials, fetchGlobalStats } from '../services/apiService';
 import TrialDetailsModal from '../components/TrialDetailsModal';
 import WorldMapCard from '../components/WorldMapCard';
-import { Activity, ShieldAlert, Award, FileSpreadsheet, Eye, RefreshCw } from 'lucide-react';
+import { Activity, ShieldAlert, Award, FileSpreadsheet, Eye, RefreshCw, Filter, X } from 'lucide-react';
 import { 
 	PieChart, Pie, Cell, ResponsiveContainer, 
 	BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid 
@@ -22,10 +22,10 @@ const INITIAL_STATS = {
     { name: 'Immunology', count: 8307, color: '#8b5cf6' }
   ],
   statusDistribution: [
-    { name: 'Recruiting', value: 65408 },
-    { name: 'Active, Not Recruiting', value: 21968 },
-    { name: 'Completed', value: 325239 },
-    { name: 'Terminated / Withdrawn', value: 52347 }
+    { name: 'Recruiting', value: 65408, statusKey: 'RECRUITING' },
+    { name: 'Active, Not Recruiting', value: 21968, statusKey: 'ACTIVE_NOT_RECRUITING' },
+    { name: 'Completed', value: 325239, statusKey: 'COMPLETED' },
+    { name: 'Terminated / Withdrawn', value: 52347, statusKey: 'TERMINATED' }
   ]
 };
 
@@ -34,8 +34,12 @@ const Dashboard = () => {
   const [globalStats, setGlobalStats] = useState(INITIAL_STATS);
   const [completedTrialsCount, setCompletedTrialsCount] = useState(INITIAL_STATS.completedThisYear);
   const [loading, setLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(false);
   const [selectedTrial, setSelectedTrial] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState(null);
+
+  const tableRef = useRef(null);
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -48,7 +52,7 @@ const Dashboard = () => {
 
         // Fetch recent trials (sorted by StudyFirstPostDate:desc)
         const trials = await fetchClinicalTrials({ sort: 'StudyFirstPostDate:desc' });
-        setRecentTrials(trials.slice(0, 5));
+        setRecentTrials(trials.slice(0, 8));
       } catch (error) {
         console.error("Error loading dashboard metrics:", error);
       } finally {
@@ -57,6 +61,39 @@ const Dashboard = () => {
     };
     loadDashboardData();
   }, []);
+
+  const handleChartClick = async (type, name, filterQuery) => {
+    setActiveFilter({ type, name, query: filterQuery });
+    setTableLoading(true);
+    try {
+      const filtered = await fetchClinicalTrials({
+        ...filterQuery,
+        sort: 'StudyFirstPostDate:desc'
+      });
+      setRecentTrials(filtered.slice(0, 10));
+      
+      if (tableRef.current) {
+        tableRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } catch (err) {
+      console.error('Error fetching filtered chart studies:', err);
+    } finally {
+      setTableLoading(false);
+    }
+  };
+
+  const handleClearFilter = async () => {
+    setActiveFilter(null);
+    setTableLoading(true);
+    try {
+      const trials = await fetchClinicalTrials({ sort: 'StudyFirstPostDate:desc' });
+      setRecentTrials(trials.slice(0, 8));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setTableLoading(false);
+    }
+  };
 
   const openTrialDetails = (trial) => {
     setSelectedTrial(trial);
@@ -148,7 +185,12 @@ const Dashboard = () => {
         {/* Chart 1: Status Distribution */}
         <div className="card" style={{ height: '400px', display: 'flex', flexDirection: 'column' }}>
           <div className="section-header">
-            <div className="section-title">Global Trial Status Distribution</div>
+            <div>
+              <div className="section-title">Global Trial Status Distribution</div>
+              <div className="section-subtitle" style={{ fontSize: '11px', marginTop: '2px', color: 'var(--primary)' }}>
+                💡 Click any slice to filter live studies feed below
+              </div>
+            </div>
           </div>
           <div style={{ flex: 1, minHeight: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -163,12 +205,22 @@ const Dashboard = () => {
                   dataKey="value"
                   label={({ percent }) => (percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : '')}
                   labelLine={false}
+                  onClick={(entry) => {
+                    const statusMap = {
+                      'Recruiting': 'RECRUITING',
+                      'Active, Not Recruiting': 'ACTIVE_NOT_RECRUITING',
+                      'Completed': 'COMPLETED',
+                      'Terminated / Withdrawn': 'TERMINATED'
+                    };
+                    const sKey = entry.statusKey || statusMap[entry.name] || 'RECRUITING';
+                    handleChartClick('Status', entry.name, { status: sKey });
+                  }}
                 >
                   {globalStats.statusDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} cursor="pointer" />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value, name) => [`${value.toLocaleString()} Trials`, name]} />
+                <Tooltip formatter={(value, name) => [`${value.toLocaleString()} Trials (Click to Filter)`, name]} />
                 <Legend verticalAlign="bottom" height={40} iconType="circle" />
               </PieChart>
             </ResponsiveContainer>
@@ -178,7 +230,12 @@ const Dashboard = () => {
         {/* Chart 2: Therapeutic Areas */}
         <div className="card" style={{ height: '400px', display: 'flex', flexDirection: 'column' }}>
           <div className="section-header">
-            <div className="section-title">Trials by Therapeutic Area</div>
+            <div>
+              <div className="section-title">Trials by Therapeutic Area</div>
+              <div className="section-subtitle" style={{ fontSize: '11px', marginTop: '2px', color: 'var(--primary)' }}>
+                💡 Click any bar to filter live studies feed by area
+              </div>
+            </div>
           </div>
           <div style={{ flex: 1, minHeight: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -197,10 +254,14 @@ const Dashboard = () => {
                   width={150}
                   tick={{ fontSize: 13, fill: 'var(--text-secondary)' }}
                 />
-                <Tooltip formatter={(value) => [`${value} Trials`, 'Count']} />
-                <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                <Tooltip formatter={(value) => [`${value} Trials (Click to Filter)`, 'Count']} />
+                <Bar 
+                  dataKey="count" 
+                  radius={[0, 4, 4, 0]}
+                  onClick={(entry) => entry && handleChartClick('Therapeutic Area', entry.name, { keyword: entry.name })}
+                >
                   {globalStats.therapeuticAreas.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
+                    <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} cursor="pointer" />
                   ))}
                 </Bar>
               </BarChart>
@@ -210,17 +271,23 @@ const Dashboard = () => {
       </div>
 
       {/* World Map of Active Trial Sites */}
-      <WorldMapCard sites={globalStats.activeSites} totalActiveTrials={globalStats.activeTrials} />
+      <WorldMapCard 
+        sites={globalStats.activeSites} 
+        totalActiveTrials={globalStats.activeTrials}
+        onSiteClick={(site) => handleChartClick('Country', site.country, { keyword: site.country })} 
+      />
 
       {/* Chart 3: Company Trial Portfolio: Active Trials vs Completed in 2026 */}
       <div className="card" style={{ height: '480px', marginTop: '24px', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>
         <div className="section-header">
-          <div className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Award size={20} color="var(--primary)" />
-            <span>Company Trial Portfolio: Active Trials vs Completed in 2026</span>
-          </div>
-          <div className="section-subtitle">
-            Comparison of active clinical trials (recruiting/enrolling) and studies completed in the current calendar year (2026) across leading pharmaceutical sponsors
+          <div>
+            <div className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Award size={20} color="var(--primary)" />
+              <span>Company Trial Portfolio: Active Trials vs Completed in 2026</span>
+            </div>
+            <div className="section-subtitle">
+              Comparison of active clinical trials and studies completed in 2026 across leading pharmaceutical sponsors (Click any company bar to filter feed)
+            </div>
           </div>
         </div>
         <div style={{ flex: 1, minHeight: 0, marginTop: '10px' }}>
@@ -240,23 +307,54 @@ const Dashboard = () => {
                 width={150}
                 tick={{ fontSize: 13, fontWeight: '600', fill: 'var(--text-secondary)' }}
               />
-              <Tooltip formatter={(value, name) => [`${value.toLocaleString()} Studies`, name]} />
+              <Tooltip formatter={(value, name) => [`${value.toLocaleString()} Studies (Click to Filter)`, name]} />
               <Legend verticalAlign="top" height={36} iconType="circle" />
-              <Bar dataKey="active" name="Active Trials" fill="#0071bc" radius={[0, 4, 4, 0]} />
-              <Bar dataKey="completed2026" name="Completed in 2026" fill="#10b981" radius={[0, 4, 4, 0]} />
+              <Bar 
+                dataKey="active" 
+                name="Active Trials" 
+                fill="#0071bc" 
+                radius={[0, 4, 4, 0]} 
+                cursor="pointer"
+                onClick={(entry) => entry && handleChartClick('Sponsor', entry.name, { sponsor: entry.name, status: 'RECRUITING' })}
+              />
+              <Bar 
+                dataKey="completed2026" 
+                name="Completed in 2026" 
+                fill="#10b981" 
+                radius={[0, 4, 4, 0]} 
+                cursor="pointer"
+                onClick={(entry) => entry && handleChartClick('Sponsor', entry.name, { sponsor: entry.name, status: 'COMPLETED' })}
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       {/* Recent Activity / Studies Feed */}
-      <div className="card">
-        <div className="section-header">
-          <div className="section-title">
-            <Activity size={20} color="var(--primary)" />
-            <span>Recent Trial Additions (ClinicalTrials.gov V2)</span>
+      <div className="card" ref={tableRef}>
+        <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <div className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Activity size={20} color="var(--primary)" />
+              <span>{activeFilter ? `Filtered Studies Feed: ${activeFilter.type} "${activeFilter.name}"` : 'Recent Trial Additions (ClinicalTrials.gov V2)'}</span>
+            </div>
+            <div className="section-subtitle" style={{ fontSize: '12px', marginTop: '2px' }}>
+              {activeFilter ? `Showing live clinical studies filtered by ${activeFilter.type.toLowerCase()} "${activeFilter.name}"` : 'Live synchronized clinical trial registry feed'}
+            </div>
           </div>
-          {loading && <RefreshCw className="animate-spin" size={18} style={{ animation: 'spin 1s linear infinite' }} />}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {activeFilter && (
+              <button 
+                onClick={handleClearFilter}
+                className="btn btn-secondary"
+                style={{ fontSize: '12px', padding: '6px 12px', gap: '6px', backgroundColor: '#fee2e2', color: '#dc2626', borderColor: '#fca5a5' }}
+              >
+                <X size={14} /> Clear Filter ({activeFilter.name})
+              </button>
+            )}
+            {(loading || tableLoading) && <RefreshCw className="animate-spin" size={18} style={{ animation: 'spin 1s linear infinite' }} />}
+          </div>
         </div>
 
         {loading ? (

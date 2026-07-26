@@ -7,7 +7,7 @@ import {
   BarChart, Bar, Cell, PieChart, Pie, Legend
 } from 'recharts';
 
-const CompanyInsights = () => {
+const CompanyInsights = ({ onNavigateToDrug }) => {
   const [searchTerm, setSearchTerm] = useState('Pfizer');
   const [showDropdown, setShowDropdown] = useState(false);
   const [companyData, setCompanyData] = useState(null);
@@ -343,7 +343,24 @@ const CompanyInsights = () => {
                           <td style={{ fontWeight: '700', color: 'var(--primary)' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                               <span style={{ height: '8px', width: '8px', backgroundColor: 'var(--accent)', borderRadius: '50%', flexShrink: 0 }} />
-                              {drugName}
+                              <button 
+                                type="button"
+                                onClick={() => onNavigateToDrug && onNavigateToDrug(drugName)}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  padding: 0,
+                                  color: 'var(--primary)',
+                                  fontWeight: '700',
+                                  textDecoration: 'underline',
+                                  cursor: 'pointer',
+                                  fontSize: '13px',
+                                  textAlign: 'left'
+                                }}
+                                title={`Search ${drugName} in OpenFDA Drug Search`}
+                              >
+                                {drugName}
+                              </button>
                             </div>
                           </td>
                           <td style={{ fontWeight: '600', color: 'var(--text-secondary)' }}>

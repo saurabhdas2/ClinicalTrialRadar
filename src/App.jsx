@@ -12,23 +12,29 @@ import {
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [drugSearchQuery, setDrugSearchQuery] = useState('');
+
+  const handleNavigateToDrug = (query) => {
+    setDrugSearchQuery(query);
+    setActiveTab('drugs');
+  };
 
   const renderActiveView = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard onNavigateToDrug={handleNavigateToDrug} />;
       case 'search':
-        return <TrialSearch />;
+        return <TrialSearch onNavigateToDrug={handleNavigateToDrug} />;
       case 'matcher':
         return <EligibilityMatcher />;
       case 'drugs':
-        return <DrugSearch />;
+        return <DrugSearch initialQuery={drugSearchQuery} key={drugSearchQuery || 'drugs'} />;
       case 'company':
-        return <CompanyInsights />;
+        return <CompanyInsights onNavigateToDrug={handleNavigateToDrug} />;
       case 'agent':
-        return <AgentPanel />;
+        return <AgentPanel onNavigateToDrug={handleNavigateToDrug} />;
       default:
-        return <Dashboard />;
+        return <Dashboard onNavigateToDrug={handleNavigateToDrug} />;
     }
   };
 

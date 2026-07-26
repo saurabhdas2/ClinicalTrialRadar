@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { fetchOpenFDADrug } from '../services/apiService';
 import { Search, Info, AlertTriangle, ShieldAlert, Sparkles, Plus, RefreshCw, Layers } from 'lucide-react';
 
-const DrugSearch = () => {
+const DrugSearch = ({ initialQuery = '' }) => {
   const [activeTab, setActiveTab] = useState('search'); // 'search' or 'compare'
   
   // Tab 1: Search state
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [drugsList, setDrugsList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedDrug, setSelectedDrug] = useState(null);
@@ -16,15 +16,13 @@ const DrugSearch = () => {
   const [compareData, setCompareData] = useState({ drug1: null, drug2: null });
   const [loadingCompare, setLoadingCompare] = useState(false);
 
-  // Search Logic
-  const handleSearchSubmit = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
+  const executeSearch = async (term) => {
+    if (!term || !term.trim()) return;
 
     setLoading(true);
     setSelectedDrug(null);
     try {
-      const results = await fetchOpenFDADrug(searchQuery);
+      const results = await fetchOpenFDADrug(term);
       setDrugsList(results);
       if (results.length > 0) {
         setSelectedDrug(results[0]);
@@ -34,6 +32,19 @@ const DrugSearch = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (initialQuery) {
+      setSearchQuery(initialQuery);
+      executeSearch(initialQuery);
+    }
+  }, [initialQuery]);
+
+  // Search Logic
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    executeSearch(searchQuery);
   };
 
   // Compare Logic

@@ -31,7 +31,7 @@
  *   field naming, making it easy to swap or add new data sources.
  */
 
-import { MOCK_TRIALS, MOCK_DRUGS, MOCK_COMPANY_METRICS, DEFAULT_GLOBAL_STATS } from './mockData';
+// Live API Data Services
 
 // ═══════════════════════════════════════════════════════════════════════════
 // UNIFIED SCHEMA MAPPERS
@@ -278,27 +278,23 @@ export const fetchClinicalTrials = async (filters = {}) => {
       return mapped;
     }
 
-    // Fallback logic
-    const fallbackResults = filterMockTrials(filters);
     if (filters.includePageToken) {
-      return { studies: fallbackResults, nextPageToken: null };
+      return { studies: [], nextPageToken: null };
     }
-    return fallbackResults;
+    return [];
 
   } catch (error) {
-    console.warn('[apiService] ClinicalTrials.gov V2 query failed, falling back to mock:', error.message);
-    const fallbackResults = filterMockTrials(filters);
+    console.warn('[apiService] ClinicalTrials.gov V2 query failed:', error.message);
     if (filters.includePageToken) {
-      return { studies: fallbackResults, nextPageToken: null };
+      return { studies: [], nextPageToken: null };
     }
-    return fallbackResults;
+    return [];
   }
 };
 
 /**
  * fetchCompletedTrialsThisYear()
- * Fetches recently completed trials (status=COMPLETED) for the Dashboard
- * "Completed This Year" KPI card. Filters for 2026 completion dates.
+ * Fetches recently completed trials (status=COMPLETED) for the Dashboard.
  *
  * @returns {Promise<Array>} Completed trials from this year
  */
@@ -310,37 +306,30 @@ export const fetchCompletedTrialsThisYear = async () => {
 
     const data = await response.json();
     if (data.studies?.length > 0) {
-      return data.studies
-        .map(mapRawStudyToUnified)
-        .filter(t => t.completionDate.startsWith('2026'));
+      return data.studies.map(mapRawStudyToUnified);
     }
-    return MOCK_TRIALS.filter(t => t.status === 'COMPLETED' && t.completionDate.includes('2026'));
-  } catch {
-    return MOCK_TRIALS.filter(t => t.status === 'COMPLETED' && t.completionDate.includes('2026'));
+    return [];
+  } catch (e) {
+    console.warn('[apiService] fetchCompletedTrialsThisYear failed:', e.message);
+    return [];
   }
 };
 
 /**
  * fetchStudyDetails(nctId)
- * Fetches the full protocol for a single trial. Used when the user opens
- * a trial detail modal in TrialSearch or AgentPanel.
- *
- * Mock IDs (NCT-MOCK-*) are served from local data without an API call.
+ * Fetches the full protocol for a single trial from ClinicalTrials.gov V2.
  *
  * @param {string} nctId - NCT identifier
  * @returns {Promise<object|null>} Unified trial object or null
  */
 export const fetchStudyDetails = async (nctId) => {
   try {
-    // Short-circuit for mock IDs — no network call needed
-    if (nctId?.startsWith('NCT-MOCK')) {
-      return MOCK_TRIALS.find(t => t.nctId === nctId) || null;
-    }
-    const response = await fetch(`https://clinicaltrials.gov/api/v2/studies/${nctId}`);
+    const response = await fetch(`https://clinicaltrials.gov/api/v2/studies/${encodeURIComponent(nctId)}`);
     if (!response.ok) throw new Error('Study not found');
     return mapRawStudyToUnified(await response.json());
-  } catch {
-    return MOCK_TRIALS.find(t => t.nctId === nctId) || null;
+  } catch (e) {
+    console.warn(`[apiService] fetchStudyDetails ${nctId} failed:`, e.message);
+    return null;
   }
 };
 

@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { fetchCompanyMetrics } from '../services/apiService';
-import { MOCK_COMPANY_METRICS } from '../services/mockData';
 import { Search, Building, Award, ShieldAlert, BarChart3, ChevronDown, Check } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell, PieChart, Pie, Legend
 } from 'recharts';
+
+const POPULAR_SPONSORS = [
+  'Pfizer', 'Novartis', 'Roche', 'Merck', 'Moderna', 'AstraZeneca',
+  'Janssen', 'Bristol Myers Squibb', 'GlaxoSmithKline', 'Eli Lilly',
+  'Sanofi', 'AbbVie', 'Amgen', 'Gilead Sciences', 'Bayer', 'Takeda', 'Regeneron'
+];
 
 const CompanyInsights = ({ onNavigateToDrug }) => {
   const [searchTerm, setSearchTerm] = useState('Pfizer');
@@ -15,7 +20,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
   const dropdownRef = useRef(null);
 
   // List of popular companies for type-ahead suggestions
-  const COMPANIES = Object.keys(MOCK_COMPANY_METRICS);
+  const COMPANIES = POPULAR_SPONSORS;
 
   useEffect(() => {
     // Load default company Pfizer

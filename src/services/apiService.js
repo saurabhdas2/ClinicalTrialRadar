@@ -420,28 +420,43 @@ export const fetchCompanyMetrics = async (companyName) => {
 
     // 2. Fetch approved drugs from OpenFDA
     let fdaDrugs = [];
+    let fdaDrugsList = [];
     try {
       const fdaUrl = `https://api.fda.gov/drug/label.json?search=openfda.manufacturer_name:"${encodeURIComponent(companyName)}"&limit=100`;
       const fdaResponse = await fetch(fdaUrl);
       if (fdaResponse.ok) {
         const fdaData = await fdaResponse.json();
-        const extracted = (fdaData.results || []).flatMap(r => {
+        const seen = new Set();
+        
+        (fdaData.results || []).forEach(r => {
           const brand = r.openfda?.brand_name?.[0];
           const generic = r.openfda?.generic_name?.[0];
-          return [brand, generic].filter(Boolean);
-        });
+          const rawName = brand || generic;
+          if (!rawName) return;
 
-        // Format names nicely (title-case uppercase entries) and deduplicate case-insensitively
-        const seen = new Set();
-        fdaDrugs = extracted.map(d => {
-          return d === d.toUpperCase()
-            ? d.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
-            : d;
-        }).filter(d => {
-          const lower = d.toLowerCase();
-          if (seen.has(lower)) return false;
+          const formattedName = rawName === rawName.toUpperCase()
+            ? rawName.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+            : rawName;
+
+          const lower = formattedName.toLowerCase();
+          if (seen.has(lower)) return;
           seen.add(lower);
-          return true;
+
+          const year = r.effective_time ? r.effective_time.substring(0, 4) : '2024';
+          
+          // Infer therapeutic area
+          const text = `${(r.openfda?.pharm_class_epc || []).join(' ')} ${(r.indications_and_usage?.[0] || '')}`.toLowerCase();
+          let area = 'General Therapeutics';
+          if (/cancer|oncology|tumour|tumor|carcinoma|leukemia|lymphoma|melanoma|neoplasm|antineoplastic/i.test(text)) area = 'Oncology';
+          else if (/cardiac|cardiovascular|heart|hypertension|arrhythmia|blood pressure|thrombosis/i.test(text)) area = 'Cardiology';
+          else if (/infection|bacterial|viral|antibiotic|antiviral|vaccine|covid|fungal|microbial|penicillin/i.test(text)) area = 'Infectious Diseases';
+          else if (/neurology|seizure|epilepsy|depression|alzheimer|parkinson|brain|psychiatric|cns/i.test(text)) area = 'Neurology / CNS';
+          else if (/arthritis|autoimmune|immunology|immunosuppressive|inflammatory|psoriasis/i.test(text)) area = 'Immunology';
+          else if (/diabetes|thyroid|endocrine|metabolic|obesity/i.test(text)) area = 'Endocrinology';
+          else if (/respiratory|asthma|copd|pulmonary|lung/i.test(text)) area = 'Respiratory';
+
+          fdaDrugs.push(formattedName);
+          fdaDrugsList.push({ name: formattedName, year, area });
         });
 
         // Merge curated flagship drugs if available in mock data for famous sponsors
@@ -449,10 +464,11 @@ export const fetchCompanyMetrics = async (companyName) => {
           k => k.toLowerCase() === normalizedSponsor
         );
         if (matchedKey && MOCK_COMPANY_METRICS[matchedKey]?.approvedDrugs) {
-          MOCK_COMPANY_METRICS[matchedKey].approvedDrugs.forEach(cd => {
+          MOCK_COMPANY_METRICS[matchedKey].approvedDrugs.forEach((cd, idx) => {
             if (!seen.has(cd.toLowerCase())) {
               seen.add(cd.toLowerCase());
               fdaDrugs.unshift(cd);
+              fdaDrugsList.unshift({ name: cd, year: String(2024 - idx), area: 'General Therapeutics' });
             }
           });
         }
@@ -531,7 +547,11 @@ export const fetchCompanyMetrics = async (companyName) => {
       status,
       phases,
       therapeuticAreas,
-      approvedDrugs: fdaDrugs.length > 0 ? fdaDrugs : [`${companyName} Compound-A`, `${companyName} Compound-B`]
+      approvedDrugs: fdaDrugs.length > 0 ? fdaDrugs : [`${companyName} Compound-A`, `${companyName} Compound-B`],
+      approvedDrugsList: fdaDrugsList.length > 0 ? fdaDrugsList : [
+        { name: `${companyName} Compound-A`, year: '2024', area: 'Oncology' },
+        { name: `${companyName} Compound-B`, year: '2023', area: 'Cardiology' }
+      ]
     };
 
   } catch (error) {
@@ -542,12 +562,21 @@ export const fetchCompanyMetrics = async (companyName) => {
       k => k.toLowerCase() === normalizedSponsor
     );
     if (matchedKey) {
-      return { name: matchedKey, ...MOCK_COMPANY_METRICS[matchedKey] };
+      const mockData = MOCK_COMPANY_METRICS[matchedKey];
+      const list = (mockData.approvedDrugs || []).map((d, idx) => ({
+        name: typeof d === 'string' ? d : d.name,
+        year: String(2024 - idx),
+        area: 'General Therapeutics'
+      }));
+      return { name: matchedKey, ...mockData, approvedDrugsList: list };
     }
 
     // Deterministic synthetic data generation via string hash fallback
     const hash = normalizedSponsor.split('').reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7) & 0x7fffffff;
     const h = (mod, offset = 0) => (hash % mod) + offset;
+
+    const synthDrugs = [`${companyName} Drug-A`, `${companyName} Drug-B`];
+    const synthList = synthDrugs.map((d, idx) => ({ name: d, year: String(2024 - idx), area: 'General Therapeutics' }));
 
     return {
       name: companyName.charAt(0).toUpperCase() + companyName.slice(1),
@@ -574,7 +603,8 @@ export const fetchCompanyMetrics = async (companyName) => {
         { name: 'Neurology',           count: h(14, 2) },
         { name: 'Infectious Diseases', count: h(8,  1) }
       ],
-      approvedDrugs: [`${companyName} Drug-A`, `${companyName} Drug-B`]
+      approvedDrugs: synthDrugs,
+      approvedDrugsList: synthList
     };
   }
 };

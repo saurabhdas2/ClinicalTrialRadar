@@ -210,7 +210,7 @@ const Dashboard = () => {
       </div>
 
       {/* World Map of Active Trial Sites */}
-      <WorldMapCard sites={globalStats.activeSites} />
+      <WorldMapCard sites={globalStats.activeSites} totalActiveTrials={globalStats.activeTrials} />
 
       {/* Chart 3: Company Trial Portfolio: Active Trials vs Completed in 2026 */}
       <div className="card" style={{ height: '480px', marginTop: '24px', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>

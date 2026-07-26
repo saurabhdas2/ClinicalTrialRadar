@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Globe, MapPin, Activity, Navigation, Info } from 'lucide-react';
 import { WORLD_MAP_PATH } from './worldMapPath';
 
-const WorldMapCard = ({ sites = [] }) => {
+const WorldMapCard = ({ sites = [], totalActiveTrials }) => {
   const [hoveredSite, setHoveredSite] = useState(null);
 
   // Dynamic Top 20 countries by active trial site volume
@@ -32,6 +32,7 @@ const WorldMapCard = ({ sites = [] }) => {
   const siteList = (sites && sites.length > 0) ? sites : defaultSites;
   const maxCount = Math.max(...siteList.map(s => s.activeCount || 1));
   const totalGlobalActive = siteList.reduce((acc, s) => acc + (s.activeCount || 0), 0);
+  const activeStudiesCountText = totalActiveTrials ? `${totalActiveTrials.toLocaleString()}` : '87,376';
 
   return (
     <div className="card" style={{ marginTop: '24px', marginBottom: '24px', padding: '24px' }}>
@@ -42,7 +43,7 @@ const WorldMapCard = ({ sites = [] }) => {
             <span>Global Active Trial Sites Map</span>
           </div>
           <div className="section-subtitle" style={{ fontSize: '13px', marginTop: '4px' }}>
-            Live geographic distribution of active clinical trial sites worldwide across 87,000+ active studies (ClinicalTrials.gov V2)
+            Live geographic distribution of active clinical trial sites worldwide across {activeStudiesCountText} active studies (ClinicalTrials.gov V2)
           </div>
         </div>
       </div>

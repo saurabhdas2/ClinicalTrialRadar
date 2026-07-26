@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchClinicalTrials, fetchCompletedTrialsThisYear, fetchGlobalStats } from '../services/apiService';
-import { DEFAULT_GLOBAL_STATS } from '../services/mockData';
+import { fetchClinicalTrials, fetchGlobalStats } from '../services/apiService';
 import TrialDetailsModal from '../components/TrialDetailsModal';
 import { Activity, ShieldAlert, Award, FileSpreadsheet, Eye, RefreshCw } from 'lucide-react';
 import { 
@@ -8,10 +7,31 @@ import {
 	BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid 
 } from 'recharts';
 
+const INITIAL_STATS = {
+  totalTrials: 595630,
+  activeTrials: 87376,
+  recruitingTrials: 65408,
+  completedThisYear: 325239,
+  therapeuticAreas: [
+    { name: 'Oncology', count: 122108, color: '#0071bc' },
+    { name: 'Cardiology', count: 67190, color: '#0ea5e9' },
+    { name: 'Respiratory', count: 55990, color: '#10b981' },
+    { name: 'Endocrinology', count: 36082, color: '#f59e0b' },
+    { name: 'Infectious Diseases', count: 23617, color: '#ef4444' },
+    { name: 'Immunology', count: 8307, color: '#8b5cf6' }
+  ],
+  statusDistribution: [
+    { name: 'Recruiting', value: 65408 },
+    { name: 'Active, Not Recruiting', value: 21968 },
+    { name: 'Completed', value: 325239 },
+    { name: 'Terminated / Withdrawn', value: 52347 }
+  ]
+};
+
 const Dashboard = () => {
   const [recentTrials, setRecentTrials] = useState([]);
-  const [globalStats, setGlobalStats] = useState(DEFAULT_GLOBAL_STATS);
-  const [completedTrialsCount, setCompletedTrialsCount] = useState(DEFAULT_GLOBAL_STATS.completedThisYear);
+  const [globalStats, setGlobalStats] = useState(INITIAL_STATS);
+  const [completedTrialsCount, setCompletedTrialsCount] = useState(INITIAL_STATS.completedThisYear);
   const [loading, setLoading] = useState(true);
   const [selectedTrial, setSelectedTrial] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -20,21 +40,14 @@ const Dashboard = () => {
     const loadDashboardData = async () => {
       setLoading(true);
       try {
-        // Fetch actual size-based statistics dynamically
+        // Fetch actual live statistics from ClinicalTrials.gov V2
         const liveStats = await fetchGlobalStats();
         setGlobalStats(liveStats);
         setCompletedTrialsCount(liveStats.completedThisYear);
 
-        // Fetch recent trials (empty filters gets default/mock)
-        const trials = await fetchClinicalTrials({});
+        // Fetch recent trials (sorted by StudyFirstPostDate:desc)
+        const trials = await fetchClinicalTrials({ sort: 'StudyFirstPostDate:desc' });
         setRecentTrials(trials.slice(0, 5));
-        
-        // Fetch completed trials this year (2026)
-        const completed = await fetchCompletedTrialsThisYear();
-        if (completed && completed.length > 0) {
-          // Adjust completed counts based on mock/live values
-          setCompletedTrialsCount(liveStats.completedThisYear + completed.length);
-        }
       } catch (error) {
         console.error("Error loading dashboard metrics:", error);
       } finally {
@@ -58,7 +71,7 @@ const Dashboard = () => {
       <div className="dashboard-hero">
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
-            🌍 Global Clinical Research Intelligence · Updated {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            🌍 Global Clinical Research Intelligence · Live API Sync {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </div>
           <h2 style={{ color: 'white', fontSize: '26px', fontFamily: 'var(--font-heading)', fontWeight: '800', marginBottom: '6px' }}>
             {globalStats.totalTrials.toLocaleString()} Clinical Studies Worldwide
@@ -80,7 +93,7 @@ const Dashboard = () => {
           <div className="hero-divider" />
           <div className="hero-stat">
             <div className="hero-stat-value" style={{ color: '#fbbf24' }}>{globalStats.completedThisYear.toLocaleString()}</div>
-            <div className="hero-stat-label">Completed '26</div>
+            <div className="hero-stat-label">Completed</div>
           </div>
         </div>
       </div>
@@ -114,7 +127,7 @@ const Dashboard = () => {
           </div>
           <div className="stat-info">
             <span className="stat-value">{completedTrialsCount.toLocaleString()}</span>
-            <span className="stat-label">Completed 2026</span>
+            <span className="stat-label">Completed Trials</span>
           </div>
         </div>
 

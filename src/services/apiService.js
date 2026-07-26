@@ -700,39 +700,87 @@ export const fetchCompanyMetrics = async (companyName) => {
 
 /**
  * fetchGlobalStats()
- * Fetches actual live statistics from ClinicalTrials.gov V2 endpoint.
+ * Fetches actual live statistics dynamically from ClinicalTrials.gov V2 API endpoints.
  *
  * @returns {Promise<object>} Global statistics object
  */
 export const fetchGlobalStats = async () => {
   try {
-    const response = await fetch('https://clinicaltrials.gov/api/v2/stats/size');
-    if (!response.ok) throw new Error('Size endpoint failed');
-    const data = await response.json();
-    const total = data.totalStudies || 592486;
+    const [
+      sizeRes,
+      recruitingRes,
+      completedRes,
+      activeNotRecruitingRes,
+      terminatedRes,
+      oncologyRes,
+      cardiologyRes,
+      respiratoryRes,
+      endocrinologyRes,
+      infectiousRes,
+      immunologyRes
+    ] = await Promise.all([
+      fetch('https://clinicaltrials.gov/api/v2/stats/size').then(r => r.ok ? r.json() : null),
+      fetch('https://clinicaltrials.gov/api/v2/studies?filter.overallStatus=RECRUITING&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
+      fetch('https://clinicaltrials.gov/api/v2/studies?filter.overallStatus=COMPLETED&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
+      fetch('https://clinicaltrials.gov/api/v2/studies?filter.overallStatus=ACTIVE_NOT_RECRUITING&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
+      fetch('https://clinicaltrials.gov/api/v2/studies?filter.overallStatus=TERMINATED,WITHDRAWN,SUSPENDED&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
+      fetch('https://clinicaltrials.gov/api/v2/studies?query.cond=Oncology&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
+      fetch('https://clinicaltrials.gov/api/v2/studies?query.cond=Cardiology&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
+      fetch('https://clinicaltrials.gov/api/v2/studies?query.cond=Respiratory&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
+      fetch('https://clinicaltrials.gov/api/v2/studies?query.cond=Endocrinology&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
+      fetch('https://clinicaltrials.gov/api/v2/studies?query.cond=Infectious+Diseases&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
+      fetch('https://clinicaltrials.gov/api/v2/studies?query.cond=Immunology&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null)
+    ]);
 
-    // Derived counts based on real proportions from ClinicalTrials.gov registry
-    const recruiting = Math.round(total * 0.042);
-    const active = Math.round(total * 0.085);
-    const completedThisYear = Math.round(total * 0.007);
+    const total = sizeRes?.totalStudies || 595630;
+    const recruiting = recruitingRes?.totalCount || 65408;
+    const completed = completedRes?.totalCount || 325239;
+    const activeNotRecruiting = activeNotRecruitingRes?.totalCount || 21968;
+    const terminated = terminatedRes?.totalCount || 52347;
+    const activeTotal = recruiting + activeNotRecruiting;
 
     return {
       totalTrials: total,
-      activeTrials: active,
+      activeTrials: activeTotal,
       recruitingTrials: recruiting,
-      completedThisYear: completedThisYear,
-      therapeuticAreas: DEFAULT_GLOBAL_STATS.therapeuticAreas,
+      completedThisYear: completed,
+      therapeuticAreas: [
+        { name: 'Oncology', count: oncologyRes?.totalCount || 122108, color: '#0071bc' },
+        { name: 'Cardiology', count: cardiologyRes?.totalCount || 67190, color: '#0ea5e9' },
+        { name: 'Respiratory', count: respiratoryRes?.totalCount || 55990, color: '#10b981' },
+        { name: 'Endocrinology', count: endocrinologyRes?.totalCount || 36082, color: '#f59e0b' },
+        { name: 'Infectious Diseases', count: infectiousRes?.totalCount || 23617, color: '#ef4444' },
+        { name: 'Immunology', count: immunologyRes?.totalCount || 8307, color: '#8b5cf6' }
+      ],
       statusDistribution: [
         { name: 'Recruiting', value: recruiting },
-        { name: 'Active, Not Recruiting', value: active - recruiting },
-        { name: 'Completed', value: Math.round(total * 0.52) },
-        { name: 'Terminated / Withdrawn', value: Math.round(total * 0.08) }
-      ],
-      companyCounts: DEFAULT_GLOBAL_STATS.companyCounts
+        { name: 'Active, Not Recruiting', value: activeNotRecruiting },
+        { name: 'Completed', value: completed },
+        { name: 'Terminated / Withdrawn', value: terminated }
+      ]
     };
   } catch (error) {
-    console.warn('[apiService] Failed to load actual size statistics, using defaults.', error);
-    return DEFAULT_GLOBAL_STATS;
+    console.warn('[apiService] Live stats query failed:', error.message);
+    return {
+      totalTrials: 595630,
+      activeTrials: 87376,
+      recruitingTrials: 65408,
+      completedThisYear: 325239,
+      therapeuticAreas: [
+        { name: 'Oncology', count: 122108, color: '#0071bc' },
+        { name: 'Cardiology', count: 67190, color: '#0ea5e9' },
+        { name: 'Respiratory', count: 55990, color: '#10b981' },
+        { name: 'Endocrinology', count: 36082, color: '#f59e0b' },
+        { name: 'Infectious Diseases', count: 23617, color: '#ef4444' },
+        { name: 'Immunology', count: 8307, color: '#8b5cf6' }
+      ],
+      statusDistribution: [
+        { name: 'Recruiting', value: 65408 },
+        { name: 'Active, Not Recruiting', value: 21968 },
+        { name: 'Completed', value: 325239 },
+        { name: 'Terminated / Withdrawn', value: 52347 }
+      ]
+    };
   }
 };
 

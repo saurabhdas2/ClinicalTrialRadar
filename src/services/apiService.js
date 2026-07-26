@@ -706,10 +706,12 @@ export const fetchCompanyMetrics = async (companyName) => {
  */
 export const fetchGlobalStats = async () => {
   try {
+    const currentYear = new Date().getFullYear();
     const [
       sizeRes,
       recruitingRes,
       completedRes,
+      completedThisYearRes,
       activeNotRecruitingRes,
       terminatedRes,
       oncologyRes,
@@ -722,6 +724,7 @@ export const fetchGlobalStats = async () => {
       fetch('https://clinicaltrials.gov/api/v2/stats/size').then(r => r.ok ? r.json() : null),
       fetch('https://clinicaltrials.gov/api/v2/studies?filter.overallStatus=RECRUITING&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
       fetch('https://clinicaltrials.gov/api/v2/studies?filter.overallStatus=COMPLETED&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
+      fetch(`https://clinicaltrials.gov/api/v2/studies?query.term=AREA%5BCompletionDate%5D${currentYear}&filter.overallStatus=COMPLETED&countTotal=true&pageSize=0`).then(r => r.ok ? r.json() : null),
       fetch('https://clinicaltrials.gov/api/v2/studies?filter.overallStatus=ACTIVE_NOT_RECRUITING&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
       fetch('https://clinicaltrials.gov/api/v2/studies?filter.overallStatus=TERMINATED,WITHDRAWN,SUSPENDED&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
       fetch('https://clinicaltrials.gov/api/v2/studies?query.cond=Oncology&countTotal=true&pageSize=0').then(r => r.ok ? r.json() : null),
@@ -734,7 +737,8 @@ export const fetchGlobalStats = async () => {
 
     const total = sizeRes?.totalStudies || 595630;
     const recruiting = recruitingRes?.totalCount || 65408;
-    const completed = completedRes?.totalCount || 325239;
+    const completedAllTime = completedRes?.totalCount || 325239;
+    const completedThisYear = completedThisYearRes?.totalCount || 6455;
     const activeNotRecruiting = activeNotRecruitingRes?.totalCount || 21968;
     const terminated = terminatedRes?.totalCount || 52347;
     const activeTotal = recruiting + activeNotRecruiting;
@@ -743,7 +747,8 @@ export const fetchGlobalStats = async () => {
       totalTrials: total,
       activeTrials: activeTotal,
       recruitingTrials: recruiting,
-      completedThisYear: completed,
+      completedAllTime: completedAllTime,
+      completedThisYear: completedThisYear,
       therapeuticAreas: [
         { name: 'Oncology', count: oncologyRes?.totalCount || 122108, color: '#0071bc' },
         { name: 'Cardiology', count: cardiologyRes?.totalCount || 67190, color: '#0ea5e9' },
@@ -755,7 +760,7 @@ export const fetchGlobalStats = async () => {
       statusDistribution: [
         { name: 'Recruiting', value: recruiting },
         { name: 'Active, Not Recruiting', value: activeNotRecruiting },
-        { name: 'Completed', value: completed },
+        { name: 'Completed', value: completedAllTime },
         { name: 'Terminated / Withdrawn', value: terminated }
       ]
     };
@@ -765,7 +770,8 @@ export const fetchGlobalStats = async () => {
       totalTrials: 595630,
       activeTrials: 87376,
       recruitingTrials: 65408,
-      completedThisYear: 325239,
+      completedAllTime: 325239,
+      completedThisYear: 6455,
       therapeuticAreas: [
         { name: 'Oncology', count: 122108, color: '#0071bc' },
         { name: 'Cardiology', count: 67190, color: '#0ea5e9' },

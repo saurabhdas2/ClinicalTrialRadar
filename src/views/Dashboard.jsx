@@ -93,7 +93,7 @@ const Dashboard = () => {
           <div className="hero-divider" />
           <div className="hero-stat">
             <div className="hero-stat-value" style={{ color: '#fbbf24' }}>{globalStats.completedThisYear.toLocaleString()}</div>
-            <div className="hero-stat-label">Completed</div>
+            <div className="hero-stat-label">Completed '26</div>
           </div>
         </div>
       </div>
@@ -126,8 +126,8 @@ const Dashboard = () => {
             <Award size={28} />
           </div>
           <div className="stat-info">
-            <span className="stat-value">{completedTrialsCount.toLocaleString()}</span>
-            <span className="stat-label">Completed Trials</span>
+            <span className="stat-value">{globalStats.completedThisYear.toLocaleString()}</span>
+            <span className="stat-label">Completed in 2026</span>
           </div>
         </div>
 

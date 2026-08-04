@@ -97,13 +97,14 @@ h1, h2, h3, h4, h5, h6 {
 
 .sidebar-logo {
   font-family: var(--font-heading);
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 800;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
   color: var(--text-on-navy);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .logo-badge {

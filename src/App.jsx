@@ -57,7 +57,7 @@ function App() {
         <div className="sidebar-header">
           <div className="sidebar-logo">
             <HeartPulse size={24} color="#0ea5e9" />
-            <span>Trial Radar</span>
+            <span>Clinical Trial Radar</span>
             <span className="logo-badge">V2</span>
           </div>
         </div>

@@ -237,6 +237,17 @@ h1, h2, h3, h4, h5, h6 {
   box-sizing: border-box;
 }
 
+.app-footer {
+  margin-top: 40px;
+  padding: 20px 0 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
 /* Cards & Layout */
 .grid-cols-4 {
   display: grid;

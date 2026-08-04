@@ -131,6 +131,9 @@ function App() {
             <a href="https://clinicaltrials.gov" target="_blank" rel="noreferrer">📋 ClinicalTrials.gov V2 API</a>
             <a href="https://open.fda.gov" target="_blank" rel="noreferrer">💊 OpenFDA Drug Label API</a>
           </div>
+          <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
+            © {new Date().getFullYear()} Saurabh Das
+          </div>
         </div>
       </aside>
 
@@ -152,9 +155,17 @@ function App() {
           </div>
         </header>
 
-
         <div className="content-body">
           {renderActiveView()}
+
+          <footer className="app-footer">
+            <div>
+              <strong>Clinical Trial Radar v2.0</strong> — Real-time Clinical & Pharmaceutical Intelligence
+            </div>
+            <div>
+              © {new Date().getFullYear()} <strong>Saurabh Das</strong>. All rights reserved.
+            </div>
+          </footer>
         </div>
       </main>
     </div>

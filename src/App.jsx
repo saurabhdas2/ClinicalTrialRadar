@@ -113,15 +113,35 @@ function App() {
           </div>
 
           <div 
-            className={`menu-item ${activeTab === 'agent' ? 'active' : ''}`}
-            onClick={() => setActiveTab('agent')}
+            className="menu-item disabled"
             style={{ 
-              border: '1px dashed rgba(14, 165, 233, 0.4)',
-              backgroundColor: activeTab === 'agent' ? 'var(--primary)' : 'rgba(14, 165, 233, 0.05)'
+              border: '1px dashed rgba(148, 163, 184, 0.3)',
+              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+              cursor: 'not-allowed',
+              opacity: 0.75,
+              display: 'flex',
+              alignItems: 'center',
+              justify: 'space-between'
             }}
+            title="Trial Radar AI is an upcoming feature coming soon in the next release."
           >
-            <Bot color={activeTab === 'agent' ? '#ffffff' : '#0ea5e9'} />
-            <span style={{ color: activeTab === 'agent' ? '#ffffff' : '#0ea5e9', fontWeight: 'bold' }}>Trial Radar AI</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Bot color="#94a3b8" />
+              <span style={{ color: '#94a3b8', fontWeight: '600' }}>Trial Radar AI</span>
+            </div>
+            <span style={{ 
+              fontSize: '9px', 
+              fontWeight: '700', 
+              backgroundColor: 'rgba(245, 158, 11, 0.15)', 
+              color: '#fbbf24', 
+              padding: '2px 6px', 
+              borderRadius: '4px',
+              border: '1px solid rgba(251, 191, 36, 0.3)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Soon
+            </span>
           </div>
         </nav>
 

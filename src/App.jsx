@@ -132,7 +132,7 @@ function App() {
             <a href="https://open.fda.gov" target="_blank" rel="noreferrer">💊 OpenFDA Drug Label API</a>
           </div>
           <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
-            © {new Date().getFullYear()} Saurabh Das
+            © 2026 Saurabh Das. All Rights Reserved.
           </div>
         </div>
       </aside>
@@ -163,7 +163,7 @@ function App() {
               <strong>Clinical Trial Radar v2.0</strong> — Real-time Clinical & Pharmaceutical Intelligence
             </div>
             <div>
-              © {new Date().getFullYear()} <strong>Saurabh Das</strong>. All rights reserved.
+              © 2026 <strong>Saurabh Das</strong>. All Rights Reserved.
             </div>
           </footer>
         </div>

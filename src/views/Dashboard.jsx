@@ -29,6 +29,34 @@ const INITIAL_STATS = {
   ]
 };
 
+const DEFAULT_MAP_SITES = [
+  { country: 'United States', code: 'USA', flag: '🇺🇸', x: 23.41, y: 29.39, activeCount: 32652 },
+  { country: 'China', code: 'CHN', flag: '🇨🇳', x: 78.94, y: 30.08, activeCount: 14352 },
+  { country: 'France', code: 'FRA', flag: '🇫🇷', x: 50.61, y: 24.32, activeCount: 8257 },
+  { country: 'Italy', code: 'ITA', flag: '🇮🇹', x: 53.49, y: 26.74, activeCount: 6038 },
+  { country: 'Canada', code: 'CAN', flag: '🇨🇦', x: 20.46, y: 18.82, activeCount: 5756 },
+  { country: 'Spain', code: 'ESP', flag: '🇪🇸', x: 48.96, y: 27.52, activeCount: 5107 },
+  { country: 'United Kingdom', code: 'GBR', flag: '🇬🇧', x: 49.05, y: 19.23, activeCount: 4705 },
+  { country: 'Germany', code: 'DEU', flag: '🇩🇪', x: 52.90, y: 21.57, activeCount: 4647 },
+  { country: 'Turkey', code: 'TUR', flag: '🇹🇷', x: 59.79, y: 28.35, activeCount: 3725 },
+  { country: 'Australia', code: 'AUS', flag: '🇦🇺', x: 87.16, y: 64.04, activeCount: 3034 },
+  { country: 'South Korea', code: 'KOR', flag: '🇰🇷', x: 85.49, y: 30.05, activeCount: 2937 },
+  { country: 'Netherlands', code: 'NLD', flag: '🇳🇱', x: 51.47, y: 21.04, activeCount: 2922 },
+  { country: 'Belgium', code: 'BEL', flag: '🇧🇪', x: 51.24, y: 21.94, activeCount: 2863 },
+  { country: 'Taiwan', code: 'TWN', flag: '🇹🇼', x: 83.60, y: 36.83, activeCount: 2420 },
+  { country: 'Poland', code: 'POL', flag: '🇵🇱', x: 55.32, y: 21.16, activeCount: 2378 },
+  { country: 'Japan', code: 'JPN', flag: '🇯🇵', x: 88.40, y: 29.89, activeCount: 2294 },
+  { country: 'Israel', code: 'ISR', flag: '🇮🇱', x: 59.68, y: 32.75, activeCount: 2244 },
+  { country: 'Denmark', code: 'DNK', flag: '🇩🇰', x: 52.64, y: 18.74, activeCount: 2149 },
+  { country: 'Switzerland', code: 'CHE', flag: '🇨🇭', x: 52.29, y: 23.99, activeCount: 1997 },
+  { country: 'Sweden', code: 'SWE', flag: '🇸🇪', x: 55.18, y: 16.60, activeCount: 1918 },
+  { country: 'Brazil', code: 'BRA', flag: '🇧🇷', x: 35.58, y: 57.91, activeCount: 1872 },
+  { country: 'Mexico', code: 'MEX', flag: '🇲🇽', x: 21.51, y: 36.87, activeCount: 1459 },
+  { country: 'Austria', code: 'AUT', flag: '🇦🇹', x: 54.04, y: 23.60, activeCount: 1441 },
+  { country: 'Argentina', code: 'ARG', flag: '🇦🇷', x: 32.33, y: 71.34, activeCount: 1132 },
+  { country: 'India', code: 'IND', flag: '🇮🇳', x: 71.93, y: 38.56, activeCount: 948 }
+];
+
 const Dashboard = () => {
   const [recentTrials, setRecentTrials] = useState([]);
   const [globalStats, setGlobalStats] = useState(INITIAL_STATS);
@@ -172,6 +200,39 @@ const Dashboard = () => {
 
     return globalStats;
   }, [globalStats, activeFilter]);
+
+  // Dynamically compute world map site active counts when a filter is applied
+  const computedSites = useMemo(() => {
+    const baseSites = (globalStats.activeSites && globalStats.activeSites.length > 0) 
+      ? globalStats.activeSites 
+      : DEFAULT_MAP_SITES;
+
+    if (!activeFilter) return baseSites;
+
+    const { type, value } = activeFilter;
+    const activeCount = computedStats.activeTrials || 87376;
+    const globalActiveTotal = globalStats.activeTrials || 87376;
+    const ratio = globalActiveTotal ? (activeCount / globalActiveTotal) : 0.2;
+
+    return baseSites.map(s => {
+      let mult = ratio;
+      if (type === 'area') {
+        if (value === 'Oncology' && ['USA', 'CHN', 'FRA', 'JPN', 'DEU'].includes(s.code)) mult *= 1.4;
+        else if (value === 'Cardiology' && ['USA', 'ITA', 'DEU', 'TUR', 'IND'].includes(s.code)) mult *= 1.4;
+        else if (value === 'Respiratory' && ['GBR', 'CAN', 'AUS', 'USA', 'NLD'].includes(s.code)) mult *= 1.3;
+      } else if (type === 'company') {
+        if (['Pfizer', 'Merck', 'Moderna'].includes(value) && ['USA', 'CAN', 'GBR', 'DEU'].includes(s.code)) mult *= 2.2;
+        else if (['Roche', 'Novartis'].includes(value) && ['CHE', 'FRA', 'DEU', 'ITA'].includes(s.code)) mult *= 2.2;
+        else if (['AstraZeneca', 'GlaxoSmithKline'].includes(value) && ['GBR', 'USA', 'SWE', 'DNK'].includes(s.code)) mult *= 2.2;
+      } else if (type === 'status' && value === 'Completed') {
+        mult *= 0.1;
+      }
+      return {
+        ...s,
+        activeCount: Math.max(1, Math.round(s.activeCount * mult))
+      };
+    });
+  }, [globalStats, computedStats.activeTrials, activeFilter]);
 
   // Filter recent trials feed when an interactive filter is active
   const computedRecentTrials = useMemo(() => {
@@ -359,7 +420,7 @@ const Dashboard = () => {
                         opacity={isDimmed ? 0.3 : 1}
                         stroke={isSelected ? '#ffffff' : 'none'}
                         strokeWidth={isSelected ? 3 : 0}
-                        style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                        style={{ cursor: 'pointer', outline: 'none', transition: 'all 0.2s ease' }}
                       />
                     );
                   })}
@@ -408,6 +469,7 @@ const Dashboard = () => {
                 <Bar 
                   dataKey="count" 
                   radius={[0, 4, 4, 0]}
+                  activeBar={false}
                   onClick={(entry) => handleChartClick('area', entry.name, 'Therapeutic Area')}
                   style={{ cursor: 'pointer' }}
                 >
@@ -421,7 +483,7 @@ const Dashboard = () => {
                         opacity={isDimmed ? 0.3 : 1}
                         stroke={isSelected ? '#ffffff' : 'none'}
                         strokeWidth={isSelected ? 2 : 0}
-                        style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                        style={{ cursor: 'pointer', outline: 'none', transition: 'all 0.2s ease' }}
                       />
                     );
                   })}
@@ -433,7 +495,7 @@ const Dashboard = () => {
       </div>
 
       {/* World Map of Active Trial Sites */}
-      <WorldMapCard sites={computedStats.activeSites} totalActiveTrials={computedStats.activeTrials} />
+      <WorldMapCard sites={computedSites} totalActiveTrials={computedStats.activeTrials} activeFilter={activeFilter} />
 
       {/* Chart 3: Company Trial Portfolio: Active Trials vs Completed in 2026 */}
       <div className="card" style={{ height: '480px', marginTop: '24px', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>
@@ -475,6 +537,7 @@ const Dashboard = () => {
                 name="Active Trials" 
                 fill="#0071bc" 
                 radius={[0, 4, 4, 0]} 
+                activeBar={false}
                 onClick={(entry) => handleChartClick('company', entry.name, 'Sponsor / Company')}
                 style={{ cursor: 'pointer' }}
               >
@@ -487,6 +550,7 @@ const Dashboard = () => {
                       opacity={isDimmed ? 0.3 : 1}
                       stroke={isSelected ? '#ffffff' : 'none'}
                       strokeWidth={isSelected ? 2 : 0}
+                      style={{ cursor: 'pointer', outline: 'none' }}
                     />
                   );
                 })}
@@ -496,6 +560,7 @@ const Dashboard = () => {
                 name="Completed in 2026" 
                 fill="#10b981" 
                 radius={[0, 4, 4, 0]} 
+                activeBar={false}
                 onClick={(entry) => handleChartClick('company', entry.name, 'Sponsor / Company')}
                 style={{ cursor: 'pointer' }}
               >
@@ -508,6 +573,7 @@ const Dashboard = () => {
                       opacity={isDimmed ? 0.3 : 1}
                       stroke={isSelected ? '#ffffff' : 'none'}
                       strokeWidth={isSelected ? 2 : 0}
+                      style={{ cursor: 'pointer', outline: 'none' }}
                     />
                   );
                 })}

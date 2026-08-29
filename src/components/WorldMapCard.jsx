@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Globe, MapPin, Activity, Navigation, Search } from 'lucide-react';
 import { WORLD_MAP_PATH } from './worldMapPath';
 
-const WorldMapCard = ({ sites = [], totalActiveTrials }) => {
+const WorldMapCard = ({ sites = [], totalActiveTrials, activeFilter = null }) => {
   const [hoveredSite, setHoveredSite] = useState(null);
   const [showTopLimit, setShowTopLimit] = useState(25);
   const [searchTerm, setSearchTerm] = useState('');
@@ -56,6 +56,11 @@ const WorldMapCard = ({ sites = [], totalActiveTrials }) => {
           <div className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '18px' }}>
             <Globe size={22} color="var(--primary)" />
             <span>Global Active Trial Sites Map</span>
+            {activeFilter && (
+              <span className="phase-badge" style={{ backgroundColor: 'var(--primary)', color: 'white', fontWeight: '700', fontSize: '11px', borderRadius: '12px' }}>
+                Filtered: {activeFilter.value}
+              </span>
+            )}
           </div>
           <div className="section-subtitle" style={{ fontSize: '13px', marginTop: '4px' }}>
             Live geographic distribution of active clinical trial sites worldwide across {activeStudiesCountText} active studies (ClinicalTrials.gov V2)

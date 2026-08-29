@@ -1004,3 +1004,22 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);
 }
 
+/* ============================================
+   Recharts focus ring & blue outline fixes
+   ============================================ */
+.recharts-wrapper *:focus,
+.recharts-wrapper *:focus-visible,
+.recharts-surface *:focus,
+.recharts-surface *:focus-visible,
+.recharts-layer *:focus,
+.recharts-layer *:focus-visible,
+.recharts-sector:focus,
+.recharts-rectangle:focus,
+path.recharts-rectangle:focus,
+g.recharts-layer:focus,
+svg.recharts-surface:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+

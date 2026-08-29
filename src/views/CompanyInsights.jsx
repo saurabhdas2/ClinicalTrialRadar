@@ -379,6 +379,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                       dataKey="count" 
                       fill="var(--primary)" 
                       radius={[4, 4, 0, 0]}
+                      activeBar={false}
                       onClick={(entry) => handleChartClick('phase', entry.phase, 'Study Phase')}
                       style={{ cursor: 'pointer' }}
                     >
@@ -392,7 +393,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                             opacity={isDimmed ? 0.3 : 1}
                             stroke={isSelected ? '#ffffff' : 'none'}
                             strokeWidth={isSelected ? 2 : 0}
-                            style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                            style={{ cursor: 'pointer', outline: 'none', transition: 'all 0.2s ease' }}
                           />
                         );
                       })}

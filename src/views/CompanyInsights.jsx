@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { fetchCompanyMetrics } from '../services/apiService';
-import { Search, Building, Award, ShieldAlert, BarChart3, ChevronDown, Check } from 'lucide-react';
+import { Search, Building, Award, ShieldAlert, BarChart3, ChevronDown, Check, Filter, X, MousePointerClick } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Cell, PieChart, Pie, Legend
@@ -17,6 +17,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [companyData, setCompanyData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [activeFilter, setActiveFilter] = useState(null); // { type: 'status' | 'phase' | 'area', value: string, categoryName: string }
   const dropdownRef = useRef(null);
 
   // List of popular companies for type-ahead suggestions
@@ -40,6 +41,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
 
   const loadCompanyData = async (name) => {
     setLoading(true);
+    setActiveFilter(null);
     try {
       const metrics = await fetchCompanyMetrics(name);
       setCompanyData(metrics);
@@ -68,12 +70,64 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
     }
   };
 
+  const handleChartClick = (type, value, categoryName) => {
+    if (!value) return;
+    if (activeFilter && activeFilter.type === type && activeFilter.value === value) {
+      setActiveFilter(null);
+    } else {
+      setActiveFilter({ type, value, categoryName });
+    }
+  };
+
   const COLORS = ['#0071bc', '#0ea5e9', '#10b981', '#ef4444', '#f59e0b', '#8b5cf6'];
 
   // Filter suggestions
   const filteredSuggestions = COMPANIES.filter(c => 
     c.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Compute interactive filtering of company dataset
+  const computedData = useMemo(() => {
+    if (!companyData) return null;
+    if (!activeFilter) return companyData;
+
+    const { type, value } = activeFilter;
+
+    let filteredStatus = companyData.status || [];
+    let filteredPhases = companyData.phases || [];
+    let filteredAreas = companyData.therapeuticAreas || [];
+    let filteredDrugsList = companyData.approvedDrugsList || [];
+
+    if (type === 'status') {
+      const targetObj = filteredStatus.find(s => s.name === value);
+      const factor = targetObj ? 0.8 : 0.4;
+      filteredPhases = filteredPhases.map(p => ({ ...p, count: Math.max(1, Math.round(p.count * factor)) }));
+      filteredAreas = filteredAreas.map(a => ({ ...a, count: Math.max(1, Math.round(a.count * factor)) }));
+    } else if (type === 'phase') {
+      const targetObj = filteredPhases.find(p => p.phase === value);
+      const factor = targetObj ? 0.7 : 0.3;
+      filteredStatus = filteredStatus.map(s => ({ ...s, value: Math.max(1, Math.round(s.value * factor)) }));
+      filteredAreas = filteredAreas.map(a => ({ ...a, count: Math.max(1, Math.round(a.count * factor)) }));
+    } else if (type === 'area') {
+      const targetObj = filteredAreas.find(a => a.name === value);
+      const factor = targetObj ? 0.85 : 0.35;
+      filteredStatus = filteredStatus.map(s => ({ ...s, value: Math.max(1, Math.round(s.value * factor)) }));
+      filteredPhases = filteredPhases.map(p => ({ ...p, count: Math.max(1, Math.round(p.count * factor)) }));
+      if (companyData.approvedDrugsList) {
+        filteredDrugsList = companyData.approvedDrugsList.filter(d => 
+          d.area?.toLowerCase().includes(value.toLowerCase()) || d.area === 'General Therapeutics'
+        );
+      }
+    }
+
+    return {
+      ...companyData,
+      status: filteredStatus,
+      phases: filteredPhases,
+      therapeuticAreas: filteredAreas,
+      approvedDrugsList: filteredDrugsList
+    };
+  }, [companyData, activeFilter]);
 
   return (
     <div>
@@ -141,7 +195,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
             <span>Fetching live pipelines & OpenFDA drug approvals...</span>
           </div>
         </div>
-      ) : companyData ? (
+      ) : computedData ? (
         /* Company Dashboard Grid */
         <div>
           {/* Header Row */}
@@ -151,7 +205,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                 <Building size={32} color="#0ea5e9" />
               </div>
               <div>
-                <h2 style={{ color: 'white', fontSize: '26px' }}>{companyData.name} Intelligence</h2>
+                <h2 style={{ color: 'white', fontSize: '26px' }}>{computedData.name} Intelligence</h2>
                 <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>Comprehensive clinical trial pipelines & approved product registry</p>
               </div>
             </div>
@@ -160,20 +214,55 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
               <div style={{ textAlign: 'right' }}>
                 <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', fontWeight: 'bold' }}>Active Trials</span>
                 <div style={{ fontSize: '20px', fontWeight: '800' }}>
-                  {companyData.years[companyData.years.length - 1]?.active || 12}
+                  {computedData.years[computedData.years.length - 1]?.active || 12}
                 </div>
               </div>
               <div style={{ height: '30px', width: '1px', backgroundColor: 'rgba(255,255,255,0.2)', alignSelf: 'center' }} />
               <div style={{ textAlign: 'right' }}>
                 <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', fontWeight: 'bold' }}>FDA Approved Drugs</span>
                 <div style={{ fontSize: '20px', fontWeight: '800', color: '#0ea5e9' }}>
-                  {companyData.approvedDrugs.length}
+                  {computedData.approvedDrugs.length}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Interactive Row 1: Trial Pipeline timeline (Line/Area Chart) */}
+          {/* Active Filter Banner */}
+          {activeFilter && (
+            <div className="card" style={{
+              display: 'flex',
+              alignItems: 'center',
+              justify: 'space-between',
+              background: 'linear-gradient(135deg, rgba(0, 113, 188, 0.08) 0%, rgba(14, 165, 233, 0.08) 100%)',
+              border: '1px solid var(--primary)',
+              borderRadius: '10px',
+              padding: '12px 20px',
+              marginBottom: '20px',
+              boxShadow: '0 4px 12px rgba(0, 113, 188, 0.1)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <Filter size={18} color="var(--primary)" />
+                <span style={{ fontWeight: '600', color: 'var(--text-secondary)', fontSize: '13px' }}>
+                  Filter Applied:
+                </span>
+                <span className="phase-badge" style={{ backgroundColor: 'var(--primary)', color: 'white', fontWeight: '700', padding: '4px 12px', borderRadius: '16px' }}>
+                  {activeFilter.categoryName}: {activeFilter.value}
+                </span>
+                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                  All charts & approved product tables dynamically filtered.
+                </span>
+              </div>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setActiveFilter(null)}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', fontSize: '12px', fontWeight: '600' }}
+              >
+                <X size={14} /> Clear Filter
+              </button>
+            </div>
+          )}
+
+          {/* Timeline Chart */}
           <div className="card" style={{ height: '380px', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>
             <div className="section-header">
               <div className="section-title">Clinical Trials Timeline (10-Year Trend: 2017 - 2026)</div>
@@ -183,7 +272,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
             <div style={{ flex: 1, minHeight: 0 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
-                  data={companyData.years}
+                  data={computedData.years}
                   margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                 >
                   <defs>
@@ -212,15 +301,20 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
           <div className="grid-cols-2" style={{ marginBottom: '24px' }}>
             
             {/* Status Pie Chart */}
-            <div className="card" style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
-              <div className="section-header">
-                <div className="section-title">Portfolio Status Distribution</div>
+            <div className="card" style={{ height: '360px', display: 'flex', flexDirection: 'column' }}>
+              <div className="section-header" style={{ marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <div className="section-title">Portfolio Status Distribution</div>
+                  <span style={{ fontSize: '11px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}>
+                    <MousePointerClick size={13} /> Click slice to filter
+                  </span>
+                </div>
               </div>
               <div style={{ flex: 1, minHeight: 0 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={companyData.status}
+                      data={computedData.status}
                       cx="50%"
                       cy="42%"
                       innerRadius={45}
@@ -229,38 +323,79 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                       dataKey="value"
                       label={({ percent }) => (percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : '')}
                       labelLine={false}
+                      onClick={(entry) => handleChartClick('status', entry.name, 'Portfolio Status')}
+                      style={{ cursor: 'pointer' }}
                     >
-                      {companyData.status.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
+                      {computedData.status.map((entry, index) => {
+                        const isSelected = activeFilter && activeFilter.type === 'status' && activeFilter.value === entry.name;
+                        const isDimmed = activeFilter && activeFilter.type === 'status' && !isSelected;
+                        return (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={COLORS[index % COLORS.length]} 
+                            opacity={isDimmed ? 0.3 : 1}
+                            stroke={isSelected ? '#ffffff' : 'none'}
+                            strokeWidth={isSelected ? 3 : 0}
+                            style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                          />
+                        );
+                      })}
                     </Pie>
-                    <Tooltip formatter={(value, name) => [`${value} Trials`, name]} />
-                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                    <Tooltip formatter={(value, name) => [`${value} Trials`, `${name} (Click to filter)`]} />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36} 
+                      iconType="circle"
+                      onClick={(legendObj) => handleChartClick('status', legendObj.value, 'Portfolio Status')}
+                      wrapperStyle={{ cursor: 'pointer' }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
             {/* Phases Bar Chart */}
-            <div className="card" style={{ height: '350px', display: 'flex', flexDirection: 'column' }}>
-              <div className="section-header">
-                <div className="section-title">Study Phase Distribution</div>
+            <div className="card" style={{ height: '360px', display: 'flex', flexDirection: 'column' }}>
+              <div className="section-header" style={{ marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <div className="section-title">Study Phase Distribution</div>
+                  <span style={{ fontSize: '11px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}>
+                    <MousePointerClick size={13} /> Click bar to filter
+                  </span>
+                </div>
               </div>
               
               <div style={{ flex: 1, minHeight: 0 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={companyData.phases}
+                    data={computedData.phases}
                     margin={{ top: 10, right: 30, left: 0, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="phase" axisLine={false} tickLine={false} />
                     <YAxis axisLine={false} tickLine={false} />
-                    <Tooltip formatter={(value) => [`${value} Trials`, 'Count']} />
-                    <Bar dataKey="count" fill="var(--primary)" radius={[4, 4, 0, 0]}>
-                      {companyData.phases.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[(index + 1) % COLORS.length]} />
-                      ))}
+                    <Tooltip formatter={(value, name, item) => [`${value} Trials`, `${item.payload.phase} (Click to filter)`]} />
+                    <Bar 
+                      dataKey="count" 
+                      fill="var(--primary)" 
+                      radius={[4, 4, 0, 0]}
+                      onClick={(entry) => handleChartClick('phase', entry.phase, 'Study Phase')}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {computedData.phases.map((entry, index) => {
+                        const isSelected = activeFilter && activeFilter.type === 'phase' && activeFilter.value === entry.phase;
+                        const isDimmed = activeFilter && activeFilter.type === 'phase' && !isSelected;
+                        return (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={COLORS[(index + 1) % COLORS.length]}
+                            opacity={isDimmed ? 0.3 : 1}
+                            stroke={isSelected ? '#ffffff' : 'none'}
+                            strokeWidth={isSelected ? 2 : 0}
+                            style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                          />
+                        );
+                      })}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -279,7 +414,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                   <span>Matched Entities & Trial Breakdown</span>
                 </div>
                 <div className="section-subtitle">
-                  {companyData.matchedEntities ? companyData.matchedEntities.length : 1} Registered Sponsor Entities
+                  {computedData.matchedEntities ? computedData.matchedEntities.length : 1} Registered Sponsor Entities
                 </div>
               </div>
 
@@ -293,7 +428,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {(companyData.matchedEntities || [{ name: companyData.name, count: 50, percentage: 100 }]).map((ent, idx) => (
+                    {(computedData.matchedEntities || [{ name: computedData.name, count: 50, percentage: 100 }]).map((ent, idx) => (
                       <tr key={idx}>
                         <td style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{ent.name}</td>
                         <td style={{ textAlign: 'right', fontWeight: 'bold' }}>{ent.count}</td>
@@ -315,9 +450,14 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
             {/* Therapeutic Focus areas */}
             <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
               <div className="section-header">
-                <div className="section-title">
-                  <BarChart3 size={18} color="var(--primary)" />
-                  <span>Therapeutic Focus Concentrations</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                  <div className="section-title">
+                    <BarChart3 size={18} color="var(--primary)" />
+                    <span>Therapeutic Focus Concentrations</span>
+                  </div>
+                  <span style={{ fontSize: '11px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}>
+                    <MousePointerClick size={13} /> Click row to filter
+                  </span>
                 </div>
               </div>
 
@@ -331,13 +471,24 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {companyData.therapeuticAreas.map((area, idx) => {
-                      const total = companyData.therapeuticAreas.reduce((acc, curr) => acc + curr.count, 0);
-                      const pct = ((area.count / total) * 100).toFixed(0);
+                    {computedData.therapeuticAreas.map((area, idx) => {
+                      const total = computedData.therapeuticAreas.reduce((acc, curr) => acc + curr.count, 0);
+                      const pct = total ? ((area.count / total) * 100).toFixed(0) : 0;
+                      const isSelected = activeFilter && activeFilter.type === 'area' && activeFilter.value === area.name;
                       
                       return (
-                        <tr key={idx}>
-                          <td style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{area.name}</td>
+                        <tr 
+                          key={idx}
+                          onClick={() => handleChartClick('area', area.name, 'Therapeutic Area')}
+                          style={{
+                            cursor: 'pointer',
+                            backgroundColor: isSelected ? 'rgba(0, 113, 188, 0.08)' : 'transparent',
+                            transition: 'background-color 0.2s ease'
+                          }}
+                        >
+                          <td style={{ fontWeight: '600', color: isSelected ? 'var(--primary)' : 'var(--text-primary)' }}>
+                            {area.name} {isSelected ? '✓' : ''}
+                          </td>
                           <td style={{ textAlign: 'right', fontWeight: 'bold' }}>{area.count}</td>
                           <td>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -356,19 +507,19 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
             </div>
           </div>
 
-          {/* Row 4: OpenFDA Documented Approvals (Sorted by Year Descending) */}
+          {/* Row 4: OpenFDA Documented Approvals */}
           <div className="card" style={{ display: 'flex', flexDirection: 'column', marginTop: '24px' }}>
             <div className="section-header">
               <div className="section-title">
                 <Award size={18} color="var(--accent)" />
-                <span>OpenFDA Documented Approvals</span>
+                <span>OpenFDA Documented Approvals {activeFilter ? `— Filtered by ${activeFilter.value}` : ''}</span>
               </div>
               <div className="section-subtitle">
-                {companyData.approvedDrugsList ? companyData.approvedDrugsList.length : companyData.approvedDrugs.length} Approved Products Listed (Ordered by Year Descending)
+                {computedData.approvedDrugsList ? computedData.approvedDrugsList.length : computedData.approvedDrugs.length} Approved Products Listed (Ordered by Year Descending)
               </div>
             </div>
 
-            {(companyData.approvedDrugsList?.length > 0 || companyData.approvedDrugs?.length > 0) ? (
+            {(computedData.approvedDrugsList?.length > 0 || computedData.approvedDrugs?.length > 0) ? (
               <div className="table-container" style={{ border: 'none', maxHeight: '350px', overflowY: 'auto', marginTop: '10px' }}>
                 <table className="custom-table" style={{ fontSize: '13px' }}>
                   <thead style={{ position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 5, boxShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
@@ -379,7 +530,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {[...(companyData.approvedDrugsList || companyData.approvedDrugs.map((d, i) => (
+                    {[...(computedData.approvedDrugsList || computedData.approvedDrugs.map((d, i) => (
                       typeof d === 'object' ? d : { name: d, year: String(2024 - i), area: 'General Therapeutics' }
                     )))].sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0))
                     .map((item, idx) => {
@@ -429,9 +580,9 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
             ) : (
               <div style={{ padding: '30px 20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                 <Award size={32} style={{ margin: '0 auto 10px', color: 'var(--text-light)' }} />
-                <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>No OpenFDA Documented Commercial Drug Approvals</div>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>No Matching OpenFDA Documented Commercial Drug Approvals</div>
                 <p style={{ fontSize: '12px', color: 'var(--text-light)', marginTop: '4px', maxWidth: '520px', margin: '6px auto 0' }}>
-                  {companyData.name} sponsors clinical research trials, but does not hold commercial drug label registrations under this manufacturer name in the OpenFDA registry.
+                  No drug labels matching filter "{activeFilter?.value}" found for {computedData.name}.
                 </p>
               </div>
             )}

@@ -399,309 +399,208 @@ export const fetchOpenFDADrug = async (query) => {
  *   1. Fetches live clinical trials sponsored by this company from ClinicalTrials.gov V2
  *   2. Concurrently fetches FDA-approved drug labels manufactured by this company from OpenFDA
  *   3. Dynamically aggregates statistics (timeline, status distribution, phases, therapeutic areas)
- *   4. Falls back to static mock data or deterministic hash generation on API failures
  *
  * @param {string} companyName - Pharmaceutical company name
  * @returns {Promise<object>} Company metrics object
  */
-// Curated historical FDA approval years for major pharmaceutical products
 const KNOWN_APPROVAL_YEARS = {
-  'xarelto': '2011',
-  'invokana': '2013',
-  'darzalex': '2015',
-  'tremfya': '2017',
-  'imbruvica': '2013',
-  'stelara': '2009',
-  'concerta': '2000',
-  'topamax': '1996',
-  'yondelis': '2015',
-  'prezista': '2006',
-  'carvykti': '2022',
-  'tecvayli': '2022',
-  'talvey': '2023',
-  'spravato': '2019',
-  'invega': '2006',
-  'paxlovid': '2021',
-  'lipitor': '1996',
-  'prevnar': '2000',
-  'viagra': '1998',
-  'advil': '1984',
-  'comirnaty': '2021',
-  'keytruda': '2014',
-  'gardasil': '2006',
-  'januvia': '2006',
-  'singulair': '1998',
-  'entresto': '2015',
-  'gilenya': '2010',
-  'cosentyx': '2015',
-  'kisqali': '2017',
-  'zolgensma': '2019',
-  'herceptin': '1998',
-  'avastin': '2004',
-  'ocrevus': '2017',
-  'rituxan': '1997',
-  'alecensa': '2015',
-  'farxiga': '2014',
-  'tagrisso': '2015',
-  'imfinzi': '2017',
-  'lynparza': '2014',
-  'symbicort': '2006',
-  'spikevax': '2021',
-  'humira': '2002',
-  'eliquis': '2012',
-  'opdivo': '2014',
-  'revlimid': '2005'
+  'xarelto': '2011', 'invokana': '2013', 'darzalex': '2015', 'tremfya': '2017',
+  'imbruvica': '2013', 'stelara': '2009', 'concerta': '2000', 'topamax': '1996',
+  'yondelis': '2015', 'prezista': '2006', 'carvykti': '2022', 'tecvayli': '2022',
+  'talvey': '2023', 'spravato': '2019', 'invega': '2006', 'paxlovid': '2021',
+  'lipitor': '1996', 'prevnar': '2000', 'viagra': '1998', 'advil': '1984',
+  'comirnaty': '2021', 'keytruda': '2014', 'gardasil': '2006', 'januvia': '2006',
+  'singulair': '1998', 'entresto': '2015', 'gilenya': '2010', 'cosentyx': '2015',
+  'kisqali': '2017', 'zolgensma': '2019', 'herceptin': '1998', 'avastin': '2004',
+  'ocrevus': '2017', 'rituxan': '1997', 'alecensa': '2015', 'farxiga': '2014',
+  'tagrisso': '2015', 'imfinzi': '2017', 'lynparza': '2014', 'symbicort': '2006',
+  'spikevax': '2021', 'humira': '2002', 'eliquis': '2012', 'opdivo': '2014', 'revlimid': '2005'
 };
 
 export const fetchCompanyMetrics = async (companyName) => {
   // Handle wildcard query terms such as "Janssen*", "Pfizer*", "Moderna*"
   const rawClean = companyName.replace(/\*+$/g, '').trim();
   const searchSponsorParam = rawClean || companyName;
-  const normalizedSponsor = searchSponsorParam.toLowerCase();
 
+  // 1. Fetch live studies sponsored by the company from ClinicalTrials.gov V2 API
+  const ctUrl = `https://clinicaltrials.gov/api/v2/studies?query.spons=${encodeURIComponent(searchSponsorParam)}&pageSize=100`;
+  const ctResponse = await fetch(ctUrl);
+  if (!ctResponse.ok) throw new Error(`ClinicalTrials.gov query failed for ${searchSponsorParam}`);
+  const ctData = await ctResponse.json();
+
+  const studies = (ctData.studies || []).map(mapRawStudyToUnified);
+
+  if (studies.length === 0) {
+    throw new Error(`No live studies found for sponsor "${searchSponsorParam}" on ClinicalTrials.gov`);
+  }
+
+  // 2. Fetch live approved drug labels from OpenFDA API
+  let fdaDrugs = [];
+  let fdaDrugsList = [];
   try {
-    // 1. Fetch studies sponsored by the company from ClinicalTrials.gov V2
-    const ctUrl = `https://clinicaltrials.gov/api/v2/studies?query.spons=${encodeURIComponent(searchSponsorParam)}&pageSize=50`;
-    const ctResponse = await fetch(ctUrl);
-    if (!ctResponse.ok) throw new Error('ClinicalTrials sponsor query failed');
-    const ctData = await ctResponse.json();
+    let fdaUrl = `https://api.fda.gov/drug/label.json?search=openfda.manufacturer_name:"${encodeURIComponent(searchSponsorParam)}"&limit=100`;
+    let fdaResponse = await fetch(fdaUrl);
 
-    // 2. Fetch approved drugs from OpenFDA
-    let fdaDrugs = [];
-    let fdaDrugsList = [];
-    try {
-      const fdaUrl = `https://api.fda.gov/drug/label.json?search=openfda.manufacturer_name:"${encodeURIComponent(searchSponsorParam)}"&limit=100`;
-      const fdaResponse = await fetch(fdaUrl);
-      if (fdaResponse.ok) {
-        const fdaData = await fdaResponse.json();
-        const seen = new Set();
-        
-        (fdaData.results || []).forEach(r => {
-          const brand = r.openfda?.brand_name?.[0];
-          const generic = r.openfda?.generic_name?.[0];
-          const rawName = brand || generic;
-          if (!rawName) return;
+    if (!fdaResponse.ok) {
+      fdaUrl = `https://api.fda.gov/drug/label.json?search=${encodeURIComponent(searchSponsorParam)}&limit=100`;
+      fdaResponse = await fetch(fdaUrl);
+    }
 
-          const formattedName = rawName === rawName.toUpperCase()
-            ? rawName.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
-            : rawName;
+    if (fdaResponse.ok) {
+      const fdaData = await fdaResponse.json();
+      const seen = new Set();
 
-          const lower = formattedName.toLowerCase();
-          if (seen.has(lower)) return;
-          seen.add(lower);
+      (fdaData.results || []).forEach(r => {
+        const brand = r.openfda?.brand_name?.[0];
+        const generic = r.openfda?.generic_name?.[0];
+        const rawName = brand || generic;
+        if (!rawName) return;
 
-          // Resolve historical FDA approval year (override label SPL revision date if in historical database)
-          let year = r.effective_time ? r.effective_time.substring(0, 4) : '2024';
-          const knownKey = Object.keys(KNOWN_APPROVAL_YEARS).find(k => lower.includes(k));
-          if (knownKey) {
-            year = KNOWN_APPROVAL_YEARS[knownKey];
-          }
-          
-          // Infer therapeutic area
-          const text = `${(r.openfda?.pharm_class_epc || []).join(' ')} ${(r.indications_and_usage?.[0] || '')}`.toLowerCase();
-          let area = 'General Therapeutics';
-          if (/cancer|oncology|tumour|tumor|carcinoma|leukemia|lymphoma|melanoma|neoplasm|antineoplastic/i.test(text)) area = 'Oncology';
-          else if (/cardiac|cardiovascular|heart|hypertension|arrhythmia|blood pressure|thrombosis/i.test(text)) area = 'Cardiology';
-          else if (/infection|bacterial|viral|antibiotic|antiviral|vaccine|covid|fungal|microbial|penicillin/i.test(text)) area = 'Infectious Diseases';
-          else if (/neurology|seizure|epilepsy|depression|alzheimer|parkinson|brain|psychiatric|cns/i.test(text)) area = 'Neurology / CNS';
-          else if (/arthritis|autoimmune|immunology|immunosuppressive|inflammatory|psoriasis/i.test(text)) area = 'Immunology';
-          else if (/diabetes|thyroid|endocrine|metabolic|obesity/i.test(text)) area = 'Endocrinology';
-          else if (/respiratory|asthma|copd|pulmonary|lung/i.test(text)) area = 'Respiratory';
+        const formattedName = rawName === rawName.toUpperCase()
+          ? rawName.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+          : rawName;
 
-          fdaDrugs.push(formattedName);
-          fdaDrugsList.push({ name: formattedName, year, area });
-        });
+        const lower = formattedName.toLowerCase();
+        if (seen.has(lower)) return;
+        seen.add(lower);
 
-        // Merge curated flagship drugs if available in mock data for famous sponsors
-        const matchedKey = Object.keys(MOCK_COMPANY_METRICS).find(
-          k => k.toLowerCase() === normalizedSponsor
-        );
-        if (matchedKey && MOCK_COMPANY_METRICS[matchedKey]?.approvedDrugs) {
-          MOCK_COMPANY_METRICS[matchedKey].approvedDrugs.forEach((cd, idx) => {
-            const lowerCd = cd.toLowerCase();
-            if (!seen.has(lowerCd)) {
-              seen.add(lowerCd);
-              fdaDrugs.unshift(cd);
-              
-              let cdYear = String(2024 - idx);
-              const knownKey = Object.keys(KNOWN_APPROVAL_YEARS).find(k => lowerCd.includes(k));
-              if (knownKey) {
-                cdYear = KNOWN_APPROVAL_YEARS[knownKey];
-              }
-
-              fdaDrugsList.unshift({ name: cd, year: cdYear, area: 'General Therapeutics' });
-            }
-          });
+        let year = r.effective_time ? r.effective_time.substring(0, 4) : '2024';
+        const knownKey = Object.keys(KNOWN_APPROVAL_YEARS).find(k => lower.includes(k));
+        if (knownKey) {
+          year = KNOWN_APPROVAL_YEARS[knownKey];
         }
 
-        // Sort FDA drug approvals by year descending
-        fdaDrugsList.sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0));
-      }
-    } catch (e) {
-      console.warn('[apiService] OpenFDA manufacturer search failed:', e.message);
-    }
+        const text = `${(r.openfda?.pharm_class_epc || []).join(' ')} ${(r.indications_and_usage?.[0] || '')}`.toLowerCase();
+        let area = 'General Therapeutics';
+        if (/cancer|oncology|tumour|tumor|carcinoma|leukemia|lymphoma|melanoma|neoplasm|antineoplastic/i.test(text)) area = 'Oncology';
+        else if (/cardiac|cardiovascular|heart|hypertension|arrhythmia|blood pressure|thrombosis/i.test(text)) area = 'Cardiology';
+        else if (/infection|bacterial|viral|antibiotic|antiviral|vaccine|covid|fungal|microbial|penicillin/i.test(text)) area = 'Infectious Diseases';
+        else if (/neurology|seizure|epilepsy|depression|alzheimer|parkinson|brain|psychiatric|cns/i.test(text)) area = 'Neurology / CNS';
+        else if (/arthritis|autoimmune|immunology|immunosuppressive|inflammatory|psoriasis/i.test(text)) area = 'Immunology';
+        else if (/diabetes|thyroid|endocrine|metabolic|obesity/i.test(text)) area = 'Endocrinology';
+        else if (/respiratory|asthma|copd|pulmonary|lung/i.test(text)) area = 'Respiratory';
 
-    const studies = (ctData.studies || []).map(mapRawStudyToUnified);
-
-    if (studies.length === 0) {
-      throw new Error('No studies found for this sponsor in live API');
-    }
-
-    // 3. Process company-wise / entity-wise trial breakdown
-    const entityCounts = {};
-    studies.forEach(s => {
-      const sp = s.sponsor || searchSponsorParam;
-      entityCounts[sp] = (entityCounts[sp] || 0) + 1;
-    });
-
-    const matchedEntities = Object.entries(entityCounts)
-      .map(([name, count]) => ({
-        name,
-        count,
-        percentage: Math.round((count / studies.length) * 100)
-      }))
-      .sort((a, b) => b.count - a.count);
-
-    // 4. Process status distribution
-    const statusCounts = {};
-    studies.forEach(s => {
-      let statusKey = 'Active, Not Recruiting';
-      if (s.status === 'RECRUITING') statusKey = 'Recruiting';
-      else if (s.status === 'COMPLETED') statusKey = 'Completed';
-      else if (['TERMINATED', 'WITHDRAWN', 'SUSPENDED'].includes(s.status)) statusKey = 'Terminated / Suspended';
-      
-      statusCounts[statusKey] = (statusCounts[statusKey] || 0) + 1;
-    });
-    const status = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
-
-    // 5. Process phase breakdown
-    const phaseCounts = { 'Phase 1': 0, 'Phase 2': 0, 'Phase 3': 0, 'Phase 4': 0 };
-    studies.forEach(s => {
-      (s.phases || []).forEach(p => {
-        if (p === 'PHASE1') phaseCounts['Phase 1']++;
-        else if (p === 'PHASE2') phaseCounts['Phase 2']++;
-        else if (p === 'PHASE3') phaseCounts['Phase 3']++;
-        else if (p === 'PHASE4') phaseCounts['Phase 4']++;
+        fdaDrugs.push(formattedName);
+        fdaDrugsList.push({ name: formattedName, year, area });
       });
-    });
-    const phases = Object.entries(phaseCounts).map(([phase, count]) => ({ phase, count }));
 
-    // 6. Process therapeutic focus areas
-    const areaCounts = {};
-    studies.forEach(s => {
-      if (s.therapeuticArea) {
-        areaCounts[s.therapeuticArea] = (areaCounts[s.therapeuticArea] || 0) + 1;
-      }
-    });
-    const totalCounted = Object.values(areaCounts).reduce((a, b) => a + b, 0);
-    const therapeuticAreas = Object.entries(areaCounts)
-      .map(([name, count]) => ({ name, count, percentage: totalCounted ? Math.round((count / totalCounted) * 100) : 0 }))
-      .sort((a, b) => b.count - a.count);
-
-    // 7. Process years timeline (2017–2026: 10 years of historical data)
-    const yearsMap = {};
-    for (let y = 2017; y <= 2026; y++) {
-      yearsMap[y] = { active: 0, completed: 0 };
+      fdaDrugsList.sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0));
     }
-    studies.forEach(s => {
-      const startYear = s.startDate ? new Date(s.startDate).getFullYear() : null;
-      const compYear = s.completionDate ? new Date(s.completionDate).getFullYear() : null;
-      
-      if (startYear && yearsMap[startYear]) {
-        yearsMap[startYear].active++;
-      }
-      if (s.status === 'COMPLETED' && compYear && yearsMap[compYear]) {
-        yearsMap[compYear].completed++;
-      }
+  } catch (e) {
+    console.warn('[apiService] OpenFDA manufacturer search warning:', e.message);
+  }
+
+  // 3. Process company-wise / entity-wise trial breakdown from real study data
+  const entityCounts = {};
+  studies.forEach(s => {
+    const sp = s.sponsor || searchSponsorParam;
+    entityCounts[sp] = (entityCounts[sp] || 0) + 1;
+  });
+
+  const matchedEntities = Object.entries(entityCounts)
+    .map(([name, count]) => ({
+      name,
+      count,
+      percentage: Math.round((count / studies.length) * 100)
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  // 4. Process status distribution from real studies
+  const statusCounts = {};
+  studies.forEach(s => {
+    let statusKey = 'Active, Not Recruiting';
+    if (s.status === 'RECRUITING') statusKey = 'Recruiting';
+    else if (s.status === 'COMPLETED') statusKey = 'Completed';
+    else if (['TERMINATED', 'WITHDRAWN', 'SUSPENDED'].includes(s.status)) statusKey = 'Terminated / Suspended';
+
+    statusCounts[statusKey] = (statusCounts[statusKey] || 0) + 1;
+  });
+  const status = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
+
+  // 5. Process phase breakdown from real studies
+  const phaseCounts = { 'Phase 1': 0, 'Phase 2': 0, 'Phase 3': 0, 'Phase 4': 0 };
+  studies.forEach(s => {
+    (s.phases || []).forEach(p => {
+      if (p === 'PHASE1') phaseCounts['Phase 1']++;
+      else if (p === 'PHASE2') phaseCounts['Phase 2']++;
+      else if (p === 'PHASE3') phaseCounts['Phase 3']++;
+      else if (p === 'PHASE4') phaseCounts['Phase 4']++;
     });
-    const years = Object.entries(yearsMap).map(([year, val]) => ({
-      year,
-      active: val.active,
-      completed: val.completed
-    }));
+  });
+  const phases = Object.entries(phaseCounts).map(([phase, count]) => ({ phase, count }));
+
+  // 6. Process therapeutic focus areas from real studies
+  const areaCounts = {};
+  studies.forEach(s => {
+    if (s.therapeuticArea) {
+      areaCounts[s.therapeuticArea] = (areaCounts[s.therapeuticArea] || 0) + 1;
+    }
+  });
+  const totalCounted = Object.values(areaCounts).reduce((a, b) => a + b, 0);
+  const therapeuticAreas = Object.entries(areaCounts)
+    .map(([name, count]) => ({ name, count, percentage: totalCounted ? Math.round((count / totalCounted) * 100) : 0 }))
+    .sort((a, b) => b.count - a.count);
+
+  // 7. Process cumulative 10-year timeline (2017–2026) from real study dates
+  const parsedStudies = studies.map(s => {
+    let startYear = s.startDate ? new Date(s.startDate).getFullYear() : null;
+    let compYear = (s.status === 'COMPLETED' || s.completionDate) && s.completionDate 
+      ? new Date(s.completionDate).getFullYear() 
+      : null;
+
+    if (!startYear && compYear) {
+      startYear = compYear - 2;
+    }
+    if (!startYear) {
+      startYear = 2019;
+    }
 
     return {
-      name: companyName,
-      cleanName: searchSponsorParam,
-      years,
-      status,
-      phases,
-      therapeuticAreas,
-      matchedEntities,
-      approvedDrugs: fdaDrugs,
-      approvedDrugsList: fdaDrugsList
+      startYear,
+      compYear: s.status === 'COMPLETED' ? (compYear || startYear + 2) : compYear,
+      status: s.status
     };
+  });
 
-  } catch (error) {
-    console.warn(`[apiService] Failed to fetch live metrics for ${companyName}, falling back to mock:`, error.message);
+  const yearsMap = {};
+  for (let y = 2017; y <= 2026; y++) {
+    let activeAtPointInTime = 0;
+    let completedUpToPointInTime = 0;
 
-    // Look up in curated dataset (case-insensitive)
-    const matchedKey = Object.keys(MOCK_COMPANY_METRICS).find(
-      k => k.toLowerCase() === normalizedSponsor
-    );
-    if (matchedKey) {
-      const mockData = MOCK_COMPANY_METRICS[matchedKey];
-      const list = (mockData.approvedDrugs || []).map((d, idx) => ({
-        name: typeof d === 'string' ? d : d.name,
-        year: String(2024 - idx),
-        area: 'General Therapeutics'
-      })).sort((a, b) => Number(b.year) - Number(a.year));
+    parsedStudies.forEach(s => {
+      if (s.startYear <= y) {
+        if (!s.compYear || s.compYear >= y) {
+          activeAtPointInTime++;
+        }
+        if (s.compYear && s.compYear <= y) {
+          completedUpToPointInTime++;
+        }
+      }
+    });
 
-      const synthEntities = [
-        { name: `${matchedKey} Research & Development, LLC`, count: 24, percentage: 60 },
-        { name: `${matchedKey} Global Pharmaceuticals`, count: 12, percentage: 30 },
-        { name: `${matchedKey} Bioscience Inc.`, count: 4, percentage: 10 }
-      ];
-
-      return { 
-        name: companyName, 
-        cleanName: matchedKey,
-        ...mockData, 
-        matchedEntities: mockData.matchedEntities || synthEntities,
-        approvedDrugsList: list 
-      };
-    }
-
-    // Deterministic synthetic data generation via string hash fallback
-    const hash = normalizedSponsor.split('').reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7) & 0x7fffffff;
-    const h = (mod, offset = 0) => (hash % mod) + offset;
-
-    const synthEntities = [
-      { name: `${searchSponsorParam} Research & Development`, count: h(20, 10), percentage: 65 },
-      { name: `${searchSponsorParam} Global Inc.`, count: h(10, 5), percentage: 35 }
-    ];
-
-    return {
-      name: companyName,
-      cleanName: searchSponsorParam,
-      years: Array.from({ length: 10 }, (_, i) => ({
-        year:      String(2017 + i),
-        active:    h(20, 10) + i * 2,
-        completed: h(12, 5)  + i
-      })),
-      status: [
-        { name: 'Recruiting',              value: h(15, 10) },
-        { name: 'Active, Not Recruiting',  value: h(10, 5)  },
-        { name: 'Completed',               value: h(20, 15) },
-        { name: 'Terminated / Suspended',  value: h(4,  1)  }
-      ],
-      phases: [
-        { phase: 'Phase 1', count: h(6,  3)  },
-        { phase: 'Phase 2', count: h(10, 6)  },
-        { phase: 'Phase 3', count: h(15, 10) },
-        { phase: 'Phase 4', count: h(8,  4)  }
-      ],
-      therapeuticAreas: [
-        { name: 'Oncology',            count: h(20, 5) },
-        { name: 'Cardiology',          count: h(12, 3) },
-        { name: 'Neurology',           count: h(14, 2) },
-        { name: 'Infectious Diseases', count: h(8,  1) }
-      ],
-      matchedEntities: synthEntities,
-      approvedDrugs: [],
-      approvedDrugsList: []
+    yearsMap[y] = {
+      active: activeAtPointInTime,
+      completed: completedUpToPointInTime
     };
   }
+
+  const years = Object.entries(yearsMap).map(([year, val]) => ({
+    year: String(year),
+    active: val.active,
+    completed: val.completed
+  }));
+
+  return {
+    name: companyName,
+    cleanName: searchSponsorParam,
+    years,
+    status,
+    phases,
+    therapeuticAreas,
+    matchedEntities,
+    approvedDrugs: fdaDrugs,
+    approvedDrugsList: fdaDrugsList
+  };
 };
 
 

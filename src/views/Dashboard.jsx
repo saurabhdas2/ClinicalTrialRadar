@@ -497,13 +497,13 @@ const Dashboard = () => {
       {/* World Map of Active Trial Sites */}
       <WorldMapCard sites={computedSites} totalActiveTrials={computedStats.activeTrials} activeFilter={activeFilter} />
 
-      {/* Chart 3: Company Trial Portfolio: Active Trials vs Completed in 2026 */}
+      {/* Chart 3: Company Studies Overview: Active Trials vs Completed in 2026 */}
       <div className="card" style={{ height: '480px', marginTop: '24px', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>
         <div className="section-header">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
             <div className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Award size={20} color="var(--primary)" />
-              <span>Company Trial Portfolio: Active Trials vs Completed in 2026</span>
+              <span>Company Studies Overview: Active Trials vs Completed in 2026</span>
             </div>
             <span style={{ fontSize: '11px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}>
               <MousePointerClick size={13} /> Click bar to filter sponsor

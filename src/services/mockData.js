@@ -280,7 +280,7 @@ export const MOCK_COMPANY_METRICS = {
       { year: "2023", active: 90, completed: 60 },
       { year: "2024", active: 95, completed: 68 },
       { year: "2025", active: 104, completed: 78 },
-      { year: "2026", active: 88, completed: 45 } // Current year
+      { year: "2026", active: 96, completed: 85 } // Current year cumulative
     ],
     status: [
       { name: "Recruiting", value: 38 },
@@ -314,7 +314,7 @@ export const MOCK_COMPANY_METRICS = {
       { year: "2023", active: 70, completed: 48 },
       { year: "2024", active: 78, completed: 55 },
       { year: "2025", active: 84, completed: 62 },
-      { year: "2026", active: 72, completed: 34 }
+      { year: "2026", active: 82, completed: 68 }
     ],
     status: [
       { name: "Recruiting", value: 28 },
@@ -348,7 +348,7 @@ export const MOCK_COMPANY_METRICS = {
       { year: "2023", active: 75, completed: 45 },
       { year: "2024", active: 83, completed: 50 },
       { year: "2025", active: 90, completed: 58 },
-      { year: "2026", active: 78, completed: 30 }
+      { year: "2026", active: 88, completed: 64 }
     ],
     status: [
       { name: "Recruiting", value: 34 },
@@ -382,7 +382,7 @@ export const MOCK_COMPANY_METRICS = {
       { year: "2023", active: 62, completed: 38 },
       { year: "2024", active: 69, completed: 44 },
       { year: "2025", active: 75, completed: 48 },
-      { year: "2026", active: 65, completed: 25 }
+      { year: "2026", active: 72, completed: 53 }
     ],
     status: [
       { name: "Recruiting", value: 25 },
@@ -416,7 +416,7 @@ export const MOCK_COMPANY_METRICS = {
       { year: "2023", active: 32, completed: 15 },
       { year: "2024", active: 36, completed: 18 },
       { year: "2025", active: 40, completed: 22 },
-      { year: "2026", active: 32, completed: 12 }
+      { year: "2026", active: 38, completed: 26 }
     ],
     status: [
       { name: "Recruiting", value: 16 },
@@ -449,7 +449,7 @@ export const MOCK_COMPANY_METRICS = {
       { year: "2023", active: 72, completed: 45 },
       { year: "2024", active: 80, completed: 50 },
       { year: "2025", active: 87, completed: 56 },
-      { year: "2026", active: 74, completed: 28 }
+      { year: "2026", active: 82, completed: 62 }
     ],
     status: [
       { name: "Recruiting", value: 29 },

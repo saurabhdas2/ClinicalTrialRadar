@@ -97,22 +97,38 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
     let filteredPhases = companyData.phases || [];
     let filteredAreas = companyData.therapeuticAreas || [];
     let filteredDrugsList = companyData.approvedDrugsList || [];
+    let filteredYears = companyData.years || [];
 
     if (type === 'status') {
       const targetObj = filteredStatus.find(s => s.name === value);
       const factor = targetObj ? 0.8 : 0.4;
       filteredPhases = filteredPhases.map(p => ({ ...p, count: Math.max(1, Math.round(p.count * factor)) }));
       filteredAreas = filteredAreas.map(a => ({ ...a, count: Math.max(1, Math.round(a.count * factor)) }));
+      filteredYears = filteredYears.map(y => ({
+        ...y,
+        active: Math.max(1, Math.round(y.active * factor)),
+        completed: Math.max(0, Math.round(y.completed * factor))
+      }));
     } else if (type === 'phase') {
       const targetObj = filteredPhases.find(p => p.phase === value);
       const factor = targetObj ? 0.7 : 0.3;
       filteredStatus = filteredStatus.map(s => ({ ...s, value: Math.max(1, Math.round(s.value * factor)) }));
       filteredAreas = filteredAreas.map(a => ({ ...a, count: Math.max(1, Math.round(a.count * factor)) }));
+      filteredYears = filteredYears.map(y => ({
+        ...y,
+        active: Math.max(1, Math.round(y.active * factor)),
+        completed: Math.max(0, Math.round(y.completed * factor))
+      }));
     } else if (type === 'area') {
       const targetObj = filteredAreas.find(a => a.name === value);
       const factor = targetObj ? 0.85 : 0.35;
       filteredStatus = filteredStatus.map(s => ({ ...s, value: Math.max(1, Math.round(s.value * factor)) }));
       filteredPhases = filteredPhases.map(p => ({ ...p, count: Math.max(1, Math.round(p.count * factor)) }));
+      filteredYears = filteredYears.map(y => ({
+        ...y,
+        active: Math.max(1, Math.round(y.active * factor)),
+        completed: Math.max(0, Math.round(y.completed * factor))
+      }));
       if (companyData.approvedDrugsList) {
         filteredDrugsList = companyData.approvedDrugsList.filter(d => 
           d.area?.toLowerCase().includes(value.toLowerCase()) || d.area === 'General Therapeutics'
@@ -125,7 +141,8 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
       status: filteredStatus,
       phases: filteredPhases,
       therapeuticAreas: filteredAreas,
-      approvedDrugsList: filteredDrugsList
+      approvedDrugsList: filteredDrugsList,
+      years: filteredYears
     };
   }, [companyData, activeFilter]);
 
@@ -135,7 +152,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
       <div className="card" style={{ marginBottom: '24px', zIndex: 30 }} ref={dropdownRef}>
         <form onSubmit={handleFormSubmit} style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', position: 'relative' }}>
           <div className="form-group" style={{ flex: 1, marginBottom: 0, position: 'relative' }}>
-            <label className="form-label" htmlFor="companySearch">Search Sponsor / Pharmaceutical Company Portfolio</label>
+            <label className="form-label" htmlFor="companySearch">Search Sponsor / Pharmaceutical Company Studies</label>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <input
                 type="text"
@@ -212,7 +229,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
 
             <div style={{ display: 'flex', gap: '16px' }}>
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', fontWeight: 'bold' }}>Active Trials</span>
+                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', fontWeight: 'bold' }}>Active Studies</span>
                 <div style={{ fontSize: '20px', fontWeight: '800' }}>
                   {computedData.years[computedData.years.length - 1]?.active || 12}
                 </div>
@@ -265,8 +282,8 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
           {/* Timeline Chart */}
           <div className="card" style={{ height: '380px', marginBottom: '24px', display: 'flex', flexDirection: 'column' }}>
             <div className="section-header">
-              <div className="section-title">Clinical Trials Timeline (10-Year Trend: 2017 - 2026)</div>
-              <div className="section-subtitle">Active vs Completed Studies over the last 10 years</div>
+              <div className="section-title">Clinical Studies Timeline (10-Year Trend: 2017 - 2026)</div>
+              <div className="section-subtitle">Active Studies (Cumulative active trials at any point in time) vs Completed Studies</div>
             </div>
             
             <div style={{ flex: 1, minHeight: 0 }}>
@@ -288,10 +305,10 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="year" axisLine={false} tickLine={false} />
                   <YAxis axisLine={false} tickLine={false} />
-                  <Tooltip />
+                  <Tooltip formatter={(value, name) => [`${value} Studies`, name]} />
                   <Legend verticalAlign="top" height={36} />
-                  <Area type="monotone" name="Active Portfolio" dataKey="active" stroke="#0071bc" fillOpacity={1} fill="url(#colorActive)" />
-                  <Area type="monotone" name="Completed Portfolio" dataKey="completed" stroke="#10b981" fillOpacity={1} fill="url(#colorCompleted)" />
+                  <Area type="monotone" name="Active Studies" dataKey="active" stroke="#0071bc" fillOpacity={1} fill="url(#colorActive)" />
+                  <Area type="monotone" name="Completed Studies" dataKey="completed" stroke="#10b981" fillOpacity={1} fill="url(#colorCompleted)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -304,7 +321,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
             <div className="card" style={{ height: '360px', display: 'flex', flexDirection: 'column' }}>
               <div className="section-header" style={{ marginBottom: '8px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                  <div className="section-title">Portfolio Status Distribution</div>
+                  <div className="section-title">Study Status Distribution</div>
                   <span style={{ fontSize: '11px', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '600' }}>
                     <MousePointerClick size={13} /> Click slice to filter
                   </span>
@@ -323,7 +340,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                       dataKey="value"
                       label={({ percent }) => (percent > 0.04 ? `${(percent * 100).toFixed(0)}%` : '')}
                       labelLine={false}
-                      onClick={(entry) => handleChartClick('status', entry.name, 'Portfolio Status')}
+                      onClick={(entry) => handleChartClick('status', entry.name, 'Study Status')}
                       style={{ cursor: 'pointer' }}
                     >
                       {computedData.status.map((entry, index) => {
@@ -341,12 +358,12 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                         );
                       })}
                     </Pie>
-                    <Tooltip formatter={(value, name) => [`${value} Trials`, `${name} (Click to filter)`]} />
+                    <Tooltip formatter={(value, name) => [`${value} Studies`, `${name} (Click to filter)`]} />
                     <Legend 
                       verticalAlign="bottom" 
                       height={36} 
                       iconType="circle"
-                      onClick={(legendObj) => handleChartClick('status', legendObj.value, 'Portfolio Status')}
+                      onClick={(legendObj) => handleChartClick('status', legendObj.value, 'Study Status')}
                       wrapperStyle={{ cursor: 'pointer' }}
                     />
                   </PieChart>
@@ -374,7 +391,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="phase" axisLine={false} tickLine={false} />
                     <YAxis axisLine={false} tickLine={false} />
-                    <Tooltip formatter={(value, name, item) => [`${value} Trials`, `${item.payload.phase} (Click to filter)`]} />
+                    <Tooltip formatter={(value, name, item) => [`${value} Studies`, `${item.payload.phase} (Click to filter)`]} />
                     <Bar 
                       dataKey="count" 
                       fill="var(--primary)" 
@@ -412,7 +429,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
               <div className="section-header">
                 <div className="section-title">
                   <Building size={18} color="var(--primary)" />
-                  <span>Matched Entities & Trial Breakdown</span>
+                  <span>Matched Entities & Study Breakdown</span>
                 </div>
                 <div className="section-subtitle">
                   {computedData.matchedEntities ? computedData.matchedEntities.length : 1} Registered Sponsor Entities
@@ -424,7 +441,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                   <thead style={{ position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 5, boxShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
                     <tr>
                       <th>Pharmaceutical Entity / Subsidiary</th>
-                      <th style={{ textAlign: 'right' }}>Trials</th>
+                      <th style={{ textAlign: 'right' }}>Studies</th>
                       <th style={{ width: '100px' }}>Share</th>
                     </tr>
                   </thead>
@@ -467,7 +484,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                   <thead>
                     <tr>
                       <th>Therapeutic Area</th>
-                      <th style={{ textAlign: 'right' }}>Trial Count</th>
+                      <th style={{ textAlign: 'right' }}>Study Count</th>
                       <th style={{ width: '120px' }}>Concentration</th>
                     </tr>
                   </thead>

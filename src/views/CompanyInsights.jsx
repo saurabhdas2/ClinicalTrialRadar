@@ -227,18 +227,18 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '16px' }}>
+            <div style={{ display: 'flex', gap: '20px' }}>
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', fontWeight: 'bold' }}>Active Studies</span>
-                <div style={{ fontSize: '20px', fontWeight: '800' }}>
-                  {computedData.years[computedData.years.length - 1]?.active || 12}
+                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.5px' }}>Active Studies</span>
+                <div style={{ fontSize: '22px', fontWeight: '800', fontVariantNumeric: 'tabular-nums' }}>
+                  {computedData.years[computedData.years.length - 1]?.active || 0}
                 </div>
               </div>
-              <div style={{ height: '30px', width: '1px', backgroundColor: 'rgba(255,255,255,0.2)', alignSelf: 'center' }} />
+              <div style={{ height: '32px', width: '1px', backgroundColor: 'rgba(255,255,255,0.2)', alignSelf: 'center' }} />
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', fontWeight: 'bold' }}>FDA Approved Drugs</span>
-                <div style={{ fontSize: '20px', fontWeight: '800', color: '#0ea5e9' }}>
-                  {computedData.approvedDrugs.length}
+                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', fontWeight: 'bold', letterSpacing: '0.5px' }}>FDA Approved Drugs</span>
+                <div style={{ fontSize: '22px', fontWeight: '800', color: '#0ea5e9', fontVariantNumeric: 'tabular-nums' }}>
+                  {(computedData.approvedDrugsList || computedData.approvedDrugs || []).length}
                 </div>
               </div>
             </div>
@@ -304,7 +304,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="year" axisLine={false} tickLine={false} />
-                  <YAxis axisLine={false} tickLine={false} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontVariantNumeric: 'tabular-nums' }} />
                   <Tooltip formatter={(value, name) => [`${value} Studies`, name]} />
                   <Legend verticalAlign="top" height={36} />
                   <Area type="monotone" name="Active Studies" dataKey="active" stroke="#0071bc" fillOpacity={1} fill="url(#colorActive)" />
@@ -390,7 +390,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="phase" axisLine={false} tickLine={false} />
-                    <YAxis axisLine={false} tickLine={false} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontVariantNumeric: 'tabular-nums' }} />
                     <Tooltip formatter={(value, name, item) => [`${value} Studies`, `${item.payload.phase} (Click to filter)`]} />
                     <Bar 
                       dataKey="count" 
@@ -441,21 +441,21 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                   <thead style={{ position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 5, boxShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
                     <tr>
                       <th>Pharmaceutical Entity / Subsidiary</th>
-                      <th style={{ textAlign: 'right' }}>Studies</th>
-                      <th style={{ width: '100px' }}>Share</th>
+                      <th style={{ textAlign: 'right', width: '90px' }}>Studies</th>
+                      <th style={{ textAlign: 'right', width: '130px' }}>Share</th>
                     </tr>
                   </thead>
                   <tbody>
                     {(computedData.matchedEntities || [{ name: computedData.name, count: 50, percentage: 100 }]).map((ent, idx) => (
                       <tr key={idx}>
                         <td style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{ent.name}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 'bold' }}>{ent.count}</td>
+                        <td style={{ textAlign: 'right', fontWeight: 'bold', fontVariantNumeric: 'tabular-nums' }}>{ent.count}</td>
                         <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
                             <div style={{ height: '6px', flex: 1, backgroundColor: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
                               <div style={{ height: '100%', width: `${ent.percentage}%`, backgroundColor: COLORS[idx % COLORS.length] }} />
                             </div>
-                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>{ent.percentage}%</span>
+                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 'bold', width: '36px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{ent.percentage}%</span>
                           </div>
                         </td>
                       </tr>
@@ -481,11 +481,11 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
 
               <div className="table-container" style={{ border: 'none', maxHeight: '250px', overflowY: 'auto' }}>
                 <table className="custom-table" style={{ fontSize: '13px' }}>
-                  <thead>
+                  <thead style={{ position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 5, boxShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
                     <tr>
                       <th>Therapeutic Area</th>
-                      <th style={{ textAlign: 'right' }}>Study Count</th>
-                      <th style={{ width: '120px' }}>Concentration</th>
+                      <th style={{ textAlign: 'right', width: '100px' }}>Study Count</th>
+                      <th style={{ textAlign: 'right', width: '140px' }}>Concentration</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -507,13 +507,13 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                           <td style={{ fontWeight: '600', color: isSelected ? 'var(--primary)' : 'var(--text-primary)' }}>
                             {area.name} {isSelected ? '✓' : ''}
                           </td>
-                          <td style={{ textAlign: 'right', fontWeight: 'bold' }}>{area.count}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 'bold', fontVariantNumeric: 'tabular-nums' }}>{area.count}</td>
                           <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
                               <div style={{ height: '8px', flex: 1, backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
                                 <div style={{ height: '100%', width: `${pct}%`, backgroundColor: COLORS[idx % COLORS.length] }} />
                               </div>
-                              <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 'bold', width: '30px' }}>{pct}%</span>
+                              <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 'bold', width: '36px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{pct}%</span>
                             </div>
                           </td>
                         </tr>
@@ -543,7 +543,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                   <thead style={{ position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 5, boxShadow: '0 2px 4px rgba(0,0,0,0.04)' }}>
                     <tr>
                       <th>Drug Name</th>
-                      <th>Year Approved / Effective</th>
+                      <th style={{ textAlign: 'center', width: '200px' }}>Year Approved / Effective</th>
                       <th>Therapeutic Area</th>
                     </tr>
                   </thead>
@@ -581,7 +581,7 @@ const CompanyInsights = ({ onNavigateToDrug }) => {
                               </button>
                             </div>
                           </td>
-                          <td style={{ fontWeight: '600', color: 'var(--text-secondary)' }}>
+                          <td style={{ textAlign: 'center', fontWeight: '600', color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
                             {year}
                           </td>
                           <td>

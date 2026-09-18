@@ -4,8 +4,7 @@
  *
  * DESIGN: This module is the sole point of contact between the agent system
  * and external APIs. It implements the "Repository Pattern" — all API calls
- * are centralized here, with automatic fallback to local mock data when live
- * APIs are unavailable (rate-limited, CORS-blocked, or network failure).
+ * are centralized here.
  *
  * DATA SOURCES:
  *   1. ClinicalTrials.gov V2 REST API
@@ -19,11 +18,6 @@
  *      Auth: None required (fully public; optional API key for higher limits)
  *      Rate Limit: 40 req/min unauthenticated, 240 req/min with key
  *      Docs: https://open.fda.gov/apis/drug/label/
- *
- * FALLBACK STRATEGY:
- *   If any API call throws (network error, 4xx, 5xx, CORS, timeout),
- *   the function silently falls back to the curated MOCK_* datasets.
- *   This ensures the application never shows a blank state to the user.
  *
  * DATA NORMALIZATION:
  *   Both API responses are mapped to unified internal schemas before being
@@ -91,7 +85,7 @@ export const mapRawStudyToUnified = (study) => {
 
   return {
     // Identity
-    nctId:         protocol.identificationModule?.nctId || `NCT-MOCK-${Math.floor(Math.random() * 1000000)}`,
+    nctId:         protocol.identificationModule?.nctId || `NCT-${Math.floor(Math.random() * 1000000)}`,
     title:         protocol.identificationModule?.briefTitle  || 'Untitled Clinical Study',
     officialTitle: protocol.identificationModule?.officialTitle || '',
 
@@ -158,68 +152,12 @@ export const mapRawDrugToUnified = (result) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// MOCK DATA HELPERS
-// Used when live API calls fail or return empty results.
-// ═══════════════════════════════════════════════════════════════════════════
-
-/**
- * filterMockTrials(filters)
- * Client-side filtering of the mock trial dataset using the same filter
- * interface as fetchClinicalTrials. Ensures the fallback returns relevant
- * results rather than the full unfiltered dataset.
- *
- * @param {object} filters - { keyword, condition, sponsor, status, phase }
- * @returns {Array} Filtered mock trials
- */
-const filterMockTrials = (filters = {}) => {
-  const filtered = MOCK_TRIALS.filter(trial => {
-    // Keyword: match against title, summary, conditions, sponsor
-    if (filters.keyword) {
-      const kw = filters.keyword.toLowerCase();
-      const corpus = `${trial.title} ${trial.summary} ${trial.conditions.join(' ')} ${trial.sponsor}`.toLowerCase();
-      if (!corpus.includes(kw)) return false;
-    }
-    // Specific condition filter
-    if (filters.condition) {
-      const cond = filters.condition.toLowerCase();
-      if (!trial.conditions.some(c => c.toLowerCase().includes(cond))) return false;
-    }
-    // Sponsor filter
-    if (filters.sponsor) {
-      if (!trial.sponsor.toLowerCase().includes(filters.sponsor.toLowerCase())) return false;
-    }
-    // Status filter
-    if (filters.status && filters.status !== 'ALL') {
-      if (trial.status !== filters.status) return false;
-    }
-    // Phase filter
-    if (filters.phase && filters.phase !== 'ALL') {
-      if (!trial.phases.includes(filters.phase)) return false;
-    }
-    return true;
-  });
-
-  // Apply sorting to mock data fallback
-  const sortOption = filters.sort || 'StudyFirstPostDate:desc';
-  if (sortOption === 'StartDate:desc' || sortOption === 'StudyFirstPostDate:desc') {
-    filtered.sort((a, b) => new Date(b.startDate || b.completionDate) - new Date(a.startDate || a.completionDate));
-  } else if (sortOption === 'LastUpdatePostDate:desc') {
-    filtered.sort((a, b) => new Date(b.completionDate) - new Date(a.completionDate));
-  } else if (sortOption === 'NctId:asc' || sortOption === 'NctId:desc') {
-    filtered.sort((a, b) => a.nctId.localeCompare(b.nctId));
-  }
-
-  return filtered;
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
 // PUBLIC API: CLINICAL TRIALS
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
  * fetchClinicalTrials(filters)
  * Queries ClinicalTrials.gov V2 API for studies matching the given filters.
- * Falls back to filterMockTrials() on any error or empty API response.
  *
  * API QUERY CONSTRUCTION:
  *   - query.term    → free-text search across all fields
@@ -291,11 +229,10 @@ export const fetchClinicalTrials = async (filters = {}) => {
 
   } catch (error) {
     console.warn('[apiService] ClinicalTrials.gov V2 query failed:', error.message);
-    const mockResults = filterMockTrials(filters);
     if (filters.includePageToken) {
-      return { studies: mockResults, totalCount: mockResults.length, nextPageToken: null };
+      return { studies: [], totalCount: 0, nextPageToken: null };
     }
-    return mockResults;
+    return [];
   }
 };
 
@@ -373,17 +310,10 @@ export const fetchOpenFDADrug = async (query) => {
     if (data.results?.length > 0) {
       return data.results.map(mapRawDrugToUnified);
     }
-    throw new Error('No FDA results — falling back to mock');
+    return [];
   } catch (error) {
-    console.warn('[apiService] OpenFDA unavailable, using mock data:', error.message);
-    // Search mock drugs by all string fields
-    const lq = query.toLowerCase();
-    return Object.values(MOCK_DRUGS).filter(d =>
-      d.brandName.toLowerCase().includes(lq)       ||
-      d.genericName.toLowerCase().includes(lq)     ||
-      d.activeIngredient.toLowerCase().includes(lq) ||
-      d.manufacturer.toLowerCase().includes(lq)
-    );
+    console.warn('[apiService] OpenFDA query warning:', error.message);
+    return [];
   }
 };
 

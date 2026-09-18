@@ -84,7 +84,6 @@ src/
 │   ├── agentMemory.js               # Stateful session-scoped memory
 │   └── toolRegistry.js              # Typed tool schemas (9 registered tools)
 ├── services/
-│   ├── mockData.js                  # 10 real trials + 5 FDA drugs + 6 company timelines
 │   ├── apiService.js                # ClinicalTrials.gov V2 + OpenFDA with dynamic endpoints
 │   └── agentEngine.js               # Public backward-compatibility facade
 ├── components/
@@ -150,7 +149,7 @@ src/
 | [ClinicalTrials.gov V2](https://clinicaltrials.gov/data-api/api) | `/api/v2/studies` | 456,000+ global clinical trials |
 | [OpenFDA Drug Labels](https://open.fda.gov/apis/drug/label/) | `/drug/label.json` | FDA-approved drug labels, warnings, side effects |
 
-Both APIs are **publicly available with no authentication**. The app includes a high-fidelity mock dataset as an automatic fallback when APIs are slow or rate-limited.
+Both APIs are **publicly available with no authentication**.
 
 ---
 
@@ -186,7 +185,6 @@ Inspired by the [openFDA](https://open.fda.gov) brand identity:
 
 - [`src/services/agentEngine.js`](src/services/agentEngine.js) — Agentic NLP + eligibility scoring
 - [`src/services/apiService.js`](src/services/apiService.js) — ClinicalTrials.gov + OpenFDA integration
-- [`src/services/mockData.js`](src/services/mockData.js) — Curated demo dataset
 - [`src/index.css`](src/index.css) — Full design token system
 - [`KAGGLE_SUBMISSION.md`](KAGGLE_SUBMISSION.md) — Kaggle submission writeup
 - [`public/demo_video.mp4`](public/demo_video.mp4) — Demo video ([YouTube](https://youtu.be/lJzXiPz1eA4))

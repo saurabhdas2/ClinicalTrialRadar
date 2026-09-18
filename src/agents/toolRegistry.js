@@ -43,8 +43,6 @@ export const TOOL_REGISTRY = {
   /**
    * search_clinical_trials
    * Calls the ClinicalTrials.gov V2 REST API with structured filters.
-   * Falls back to local mock data if the live API is unavailable (rate-limited,
-   * CORS-blocked, or network failure) — ensuring zero blank-state UX.
    */
   search_clinical_trials: {
     name: 'search_clinical_trials',

@@ -42,7 +42,6 @@
  *        │                            │
  *        ▼                            ▼
  *  ClinicalTrials.gov V2        OpenFDA Drug API
- *  (with mock fallback)         (with mock fallback)
  *
  * REASONING STEPS:
  *   The orchestrator emits a `steps[]` array that the UI renders as a

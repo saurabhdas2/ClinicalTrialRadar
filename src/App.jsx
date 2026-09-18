@@ -7,16 +7,23 @@ import CompanyInsights from './views/CompanyInsights';
 import AgentPanel from './views/AgentPanel';
 import { 
   Activity, Search, UserCheck, Pill, Building, Bot, 
-  Settings, HeartPulse 
+  Settings, HeartPulse, Menu, X 
 } from 'lucide-react';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [drugSearchQuery, setDrugSearchQuery] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleNavigateToDrug = (query) => {
     setDrugSearchQuery(query);
     setActiveTab('drugs');
+    setMobileMenuOpen(false);
+  };
+
+  const handleSelectTab = (tab) => {
+    setActiveTab(tab);
+    setMobileMenuOpen(false);
   };
 
   const renderActiveView = () => {
@@ -52,14 +59,30 @@ function App() {
 
   return (
     <div className="app-container">
+      {/* Mobile Sidebar Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="sidebar-overlay" 
+          onClick={() => setMobileMenuOpen(false)} 
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar Navigation */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${mobileMenuOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
             <HeartPulse size={24} color="#0ea5e9" />
             <span>Clinical Trial Radar</span>
             <span className="logo-badge">V2</span>
           </div>
+          <button 
+            className="sidebar-close-btn"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Close sidebar navigation"
+          >
+            <X size={20} color="var(--text-on-navy-secondary)" />
+          </button>
         </div>
 
         <nav className="sidebar-menu">
@@ -69,7 +92,7 @@ function App() {
 
           <div 
             className={`menu-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => handleSelectTab('dashboard')}
           >
             <Activity />
             <span>Dashboard</span>
@@ -77,7 +100,7 @@ function App() {
 
           <div 
             className={`menu-item ${activeTab === 'search' ? 'active' : ''}`}
-            onClick={() => setActiveTab('search')}
+            onClick={() => handleSelectTab('search')}
           >
             <Search />
             <span>Clinical Search</span>
@@ -85,7 +108,7 @@ function App() {
 
           <div 
             className={`menu-item ${activeTab === 'matcher' ? 'active' : ''}`}
-            onClick={() => setActiveTab('matcher')}
+            onClick={() => handleSelectTab('matcher')}
           >
             <UserCheck />
             <span>Eligibility Matcher</span>
@@ -93,7 +116,7 @@ function App() {
 
           <div 
             className={`menu-item ${activeTab === 'drugs' ? 'active' : ''}`}
-            onClick={() => setActiveTab('drugs')}
+            onClick={() => handleSelectTab('drugs')}
           >
             <Pill />
             <span>OpenFDA Drug Search</span>
@@ -101,7 +124,7 @@ function App() {
 
           <div 
             className={`menu-item ${activeTab === 'company' ? 'active' : ''}`}
-            onClick={() => setActiveTab('company')}
+            onClick={() => handleSelectTab('company')}
           >
             <Building />
             <span>Company Insights</span>
@@ -160,14 +183,24 @@ function App() {
       {/* Main Content Body */}
       <main className="main-content">
         <header className="top-bar">
-          <div className="top-bar-title">
-            <h1>{getPageTitle()}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button 
+              className="mobile-menu-toggle"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+            <div className="top-bar-title">
+              <h1>{getPageTitle()}</h1>
+            </div>
           </div>
+          
           <div className="top-bar-meta">
             <span style={{ fontSize: '12px', color: 'var(--text-light)' }}>
               {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
-            <div style={{ width: '1px', height: '20px', backgroundColor: 'var(--border)' }} />
+            <div className="top-bar-divider" style={{ width: '1px', height: '20px', backgroundColor: 'var(--border)' }} />
             <div className="live-badge">
               <span className="live-dot" />
               <span>Live APIs Connected</span>

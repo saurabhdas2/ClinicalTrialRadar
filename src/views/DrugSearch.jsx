@@ -142,7 +142,7 @@ const DrugSearch = ({ initialQuery = '' }) => {
             </div>
           ) : (
             /* Results & Detail Grid split */
-            <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '24px' }}>
+            <div className="drug-search-grid" style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '24px' }}>
               {/* Left results list */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)', paddingLeft: '4px' }}>Matches ({drugsList.length})</span>

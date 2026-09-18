@@ -69,7 +69,7 @@ const WorldMapCard = ({ sites = [], totalActiveTrials, activeFilter = null }) =>
       </div>
 
       {/* Main Container: Split into Map Canvas and Leaderboard */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', alignItems: 'start' }}>
+      <div className="world-map-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', alignItems: 'start' }}>
         
         {/* World Map Vector Canvas */}
         <div style={{ 

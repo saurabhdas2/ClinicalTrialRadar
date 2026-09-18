@@ -138,7 +138,8 @@ const TrialSearch = () => {
       {/* Search Filters Card */}
       <div className="card" style={{ marginBottom: '24px' }}>
         <form onSubmit={handleSearchSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '16px' }}>
+          {/* Input fields row */}
+          <div className="search-filter-grid-top" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '16px' }}>
             <div className="form-group">
               <label className="form-label" htmlFor="keyword">Keyword Search</label>
               <input
@@ -177,7 +178,7 @@ const TrialSearch = () => {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', alignItems: 'flex-end' }}>
+          <div className="search-filter-grid-bottom" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', alignItems: 'flex-end' }}>
             <div className="form-group">
               <label className="form-label" htmlFor="phase">Study Phase</label>
               <select
@@ -308,7 +309,7 @@ const TrialSearch = () => {
           </div>
 
           {/* 2-Column Cards Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+          <div className="trial-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
             {trials.map((trial) => (
               <div key={trial.nctId} className="card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '260px' }}>
                 <div>

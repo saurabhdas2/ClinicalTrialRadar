@@ -94,9 +94,9 @@ const EligibilityMatcher = () => {
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '24px', height: '100%' }}>
+    <div className="matcher-grid" style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '24px', height: '100%' }}>
       {/* Patient Profile Form (Left Column) */}
-      <div>
+      <div className="matcher-form-col">
         <div className="card" style={{ height: 'fit-content' }}>
           <div className="section-header" style={{ marginBottom: '16px' }}>
             <div className="section-title">
@@ -172,7 +172,7 @@ const EligibilityMatcher = () => {
       </div>
 
       {/* Matching Results (Right Column) */}
-      <div style={{ height: 'calc(100vh - 140px)', overflowY: 'auto', paddingRight: '8px' }}>
+      <div className="matcher-results-col" style={{ height: 'calc(100vh - 140px)', overflowY: 'auto', paddingRight: '8px' }}>
         {loading ? (
           <div className="card" style={{ padding: '60px 0', textAlign: 'center', color: 'var(--text-secondary)' }}>
             <div style={{ fontSize: '18px', fontWeight: '500' }}>Evaluating Clinical Criteria...</div>

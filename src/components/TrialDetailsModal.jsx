@@ -61,7 +61,7 @@ const TrialDetailsModal = ({ isOpen, onClose, trial }) => {
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
           {/* Quick Info Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', backgroundColor: '#f1f5f9', padding: '16px', borderRadius: '8px' }}>
+          <div className="modal-quick-info-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', backgroundColor: '#f1f5f9', padding: '16px', borderRadius: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Activity size={20} color="var(--primary)" />
               <div>

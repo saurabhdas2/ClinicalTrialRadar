@@ -61,6 +61,7 @@ const Dashboard = () => {
   const [recentTrials, setRecentTrials] = useState([]);
   const [globalStats, setGlobalStats] = useState(INITIAL_STATS);
   const [loading, setLoading] = useState(true);
+  const [loadingTable, setLoadingTable] = useState(false);
   const [selectedTrial, setSelectedTrial] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
@@ -74,10 +75,6 @@ const Dashboard = () => {
         // Fetch actual live statistics from ClinicalTrials.gov V2
         const liveStats = await fetchGlobalStats();
         setGlobalStats(liveStats);
-
-        // Fetch recent trials (sorted by StudyFirstPostDate:desc)
-        const trials = await fetchClinicalTrials({ sort: 'StudyFirstPostDate:desc' });
-        setRecentTrials(trials.slice(0, 5));
       } catch (error) {
         console.error("Error loading dashboard metrics:", error);
       } finally {
@@ -86,6 +83,37 @@ const Dashboard = () => {
     };
     loadDashboardData();
   }, []);
+
+  // Dynamically fetch live matching trials when an interactive filter (e.g. company, area, status) is clicked
+  useEffect(() => {
+    const fetchFilteredTableData = async () => {
+      setLoadingTable(true);
+      try {
+        let queryFilters = { sort: 'StudyFirstPostDate:desc', pageSize: 20 };
+        if (activeFilter) {
+          const { type, value } = activeFilter;
+          if (type === 'company') {
+            queryFilters.sponsor = value;
+          } else if (type === 'area') {
+            queryFilters.condition = value;
+          } else if (type === 'status') {
+            if (value === 'Recruiting') queryFilters.status = 'RECRUITING';
+            else if (value === 'Completed') queryFilters.status = 'COMPLETED';
+            else if (value.includes('Active')) queryFilters.status = 'ACTIVE_NOT_RECRUITING';
+            else if (value.includes('Terminated') || value.includes('Withdrawn')) queryFilters.status = 'TERMINATED';
+          }
+        }
+        const trials = await fetchClinicalTrials(queryFilters);
+        setRecentTrials(trials.slice(0, 10));
+      } catch (err) {
+        console.error("Error fetching filtered trials for feed:", err);
+      } finally {
+        setLoadingTable(false);
+      }
+    };
+
+    fetchFilteredTableData();
+  }, [activeFilter]);
 
   const openTrialDetails = (trial) => {
     setSelectedTrial(trial);
@@ -528,7 +556,26 @@ const Dashboard = () => {
                 axisLine={false} 
                 tickLine={false} 
                 width={150}
-                tick={{ fontSize: 13, fontWeight: '600', fill: 'var(--text-secondary)' }}
+                tick={(props) => {
+                  const { x, y, payload } = props;
+                  const isSelected = activeFilter && activeFilter.type === 'company' && activeFilter.value === payload.value;
+                  return (
+                    <g transform={`translate(${x},${y})`}>
+                      <text
+                        x={-10}
+                        y={4}
+                        textAnchor="end"
+                        fill={isSelected ? 'var(--primary)' : 'var(--text-secondary)'}
+                        fontWeight={isSelected ? '800' : '600'}
+                        fontSize={13}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => handleChartClick('company', payload.value, 'Sponsor / Company')}
+                      >
+                        {payload.value}
+                      </text>
+                    </g>
+                  );
+                }}
               />
               <Tooltip formatter={(value, name, item) => [`${value.toLocaleString()} Studies`, `${name} - ${item.payload.name} (Click to filter)`]} />
               <Legend verticalAlign="top" height={36} iconType="circle" />
@@ -586,16 +633,50 @@ const Dashboard = () => {
       {/* Recent Activity / Studies Feed */}
       <div className="card">
         <div className="section-header">
-          <div className="section-title">
-            <Activity size={20} color="var(--primary)" />
-            <span>Recent Trial Additions (ClinicalTrials.gov V2) {activeFilter ? `— Filtered by ${activeFilter.value}` : ''}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <div className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <Activity size={20} color="var(--primary)" />
+              <span>Recent Trial Additions (ClinicalTrials.gov V2)</span>
+              {activeFilter && (
+                <span 
+                  className="phase-badge" 
+                  style={{ 
+                    backgroundColor: 'var(--primary-light)', 
+                    color: 'var(--primary)', 
+                    fontWeight: '700', 
+                    fontSize: '12px', 
+                    borderRadius: '16px',
+                    padding: '4px 12px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    border: '1px solid rgba(0, 113, 188, 0.3)'
+                  }}
+                >
+                  Filtered by {activeFilter.categoryName || activeFilter.type}: <strong>{activeFilter.value}</strong>
+                  <button 
+                    onClick={() => setActiveFilter(null)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', color: 'var(--primary)' }}
+                    title="Clear filter"
+                  >
+                    <X size={14} />
+                  </button>
+                </span>
+              )}
+            </div>
+            {(loading || loadingTable) && <RefreshCw className="animate-spin" size={18} style={{ animation: 'spin 1s linear infinite' }} />}
           </div>
-          {loading && <RefreshCw className="animate-spin" size={18} style={{ animation: 'spin 1s linear infinite' }} />}
+          <div className="section-subtitle">
+            {activeFilter 
+              ? `Showing real-time clinical studies matching "${activeFilter.value}" from ClinicalTrials.gov V2`
+              : 'Live feed of latest clinical trial registrations updated directly from global registries'}
+          </div>
         </div>
 
-        {loading ? (
+        {(loading || loadingTable) ? (
           <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-secondary)' }}>
-            Loading live clinical studies...
+            <RefreshCw className="spin" size={24} style={{ margin: '0 auto 8px', color: 'var(--primary)' }} />
+            <div>Querying ClinicalTrials.gov V2 for live studies...</div>
           </div>
         ) : (
           <div className="table-container">
